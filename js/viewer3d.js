@@ -1,10 +1,10 @@
 /**
  * Astana 3D Digital Twin - WebGL 3D Viewer Engine
- * Powered by Three.js (ES Module)
+ * Powered by Three.js (ES Module via importmap)
  */
-import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 class AstanaViewer3D {
   constructor(canvasId, loaderId, hudId) {
