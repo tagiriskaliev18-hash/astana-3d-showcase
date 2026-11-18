@@ -18,6 +18,13 @@ class AstanaViewer3D {
     this.isHoveringModel = false;
     
     this.models = {
+      canyon: {
+        file: './assets/models/astana_cyberpunk_canyon.glb',
+        name: 'Нео-Астана (Galazi 3D · 1,618 деталей)',
+        camPos: new THREE.Vector3(12, 14, 25),
+        target: new THREE.Vector3(0, 6, -10),
+        scale: 1.0
+      },
       baiterek: {
         file: './assets/models/baiterek.glb',
         name: 'Монумент Байтерек',
@@ -232,38 +239,42 @@ class AstanaViewer3D {
           // Store original materials for shading swaps
           child.userData.origMaterial = child.material;
 
-          // Realistic material tuning
-          if (child.name.includes('Gold') || child.name.includes('Sphere')) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0xffd700,
-              metalness: 0.95,
-              roughness: 0.15,
-              envMapIntensity: 2.0
-            });
-          } else if (child.name.includes('Tent') || child.name.includes('NurAlem_Sphere')) {
-            child.material = new THREE.MeshPhysicalMaterial({
-              color: 0x93c5fd,
-              metalness: 0.1,
-              roughness: 0.2,
-              transmission: 0.65,
-              thickness: 1.2,
-              transparent: true,
-              opacity: 0.85
-            });
-          } else if (child.name.includes('Pool')) {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0x0284c7,
-              roughness: 0.1,
-              metalness: 0.3
-            });
+          if (key === 'canyon') {
+            child.userData.pbrMaterial = child.material;
           } else {
-            child.material = new THREE.MeshStandardMaterial({
-              color: 0xcccccc,
-              roughness: 0.6,
-              metalness: 0.2
-            });
+            // Realistic material tuning
+            if (child.name.includes('Gold') || child.name.includes('Sphere')) {
+              child.material = new THREE.MeshStandardMaterial({
+                color: 0xffd700,
+                metalness: 0.95,
+                roughness: 0.15,
+                envMapIntensity: 2.0
+              });
+            } else if (child.name.includes('Tent') || child.name.includes('NurAlem_Sphere')) {
+              child.material = new THREE.MeshPhysicalMaterial({
+                color: 0x93c5fd,
+                metalness: 0.1,
+                roughness: 0.2,
+                transmission: 0.65,
+                thickness: 1.2,
+                transparent: true,
+                opacity: 0.85
+              });
+            } else if (child.name.includes('Pool')) {
+              child.material = new THREE.MeshStandardMaterial({
+                color: 0x0284c7,
+                roughness: 0.1,
+                metalness: 0.3
+              });
+            } else {
+              child.material = new THREE.MeshStandardMaterial({
+                color: 0xcccccc,
+                roughness: 0.6,
+                metalness: 0.2
+              });
+            }
+            child.userData.pbrMaterial = child.material;
           }
-          child.userData.pbrMaterial = child.material;
         }
       });
 
@@ -310,6 +321,15 @@ class AstanaViewer3D {
             color: 0xd8d8d8
           });
           child.material.wireframe = false;
+        } else if (mode === 'random') {
+          if (!child.userData.randomColor) {
+            const hue = ((child.id * 137.508) % 360) / 360;
+            child.userData.randomColor = new THREE.Color().setHSL(hue, 0.65, 0.62);
+          }
+          child.material = new THREE.MeshLambertMaterial({
+            color: child.userData.randomColor,
+            wireframe: false
+          });
         } else if (mode === 'depth') {
           // Depth scan shader
           child.material = new THREE.MeshDepthMaterial();

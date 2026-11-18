@@ -87,6 +87,7 @@
 
           <!-- Top-Right Model Switcher Tabs -->
           <div class="model-selector-bar">
+            <button type="button" class="model-tab-btn" data-model="canyon">🏙️ Нео-Астана (1,618 деталей)</button>
             <button type="button" class="model-tab-btn active" data-model="baiterek">🏛️ Байтерек</button>
             <button type="button" class="model-tab-btn" data-model="khanshatyr">⛺ Хан Шатыр</button>
             <button type="button" class="model-tab-btn" data-model="nuralem">🌐 Нур Алем</button>
@@ -99,6 +100,7 @@
               <button type="button" class="shading-btn active" data-shading="pbr">💎 PBR Studio</button>
               <button type="button" class="shading-btn" data-shading="wireframe">🟧 Wireframe</button>
               <button type="button" class="shading-btn" data-shading="clay">⬜ Clay Solid</button>
+              <button type="button" class="shading-btn" data-shading="random">🎨 Random Pastel</button>
               <button type="button" class="shading-btn" data-shading="depth">🌊 Z-Depth</button>
             </div>
 
@@ -142,6 +144,49 @@
         </div>
 
         <div class="models-grid">
+          <!-- CARD 0: NEO-ASTANA CANYON (GALAZI STYLE) -->
+          <article class="model-card featured" data-model-id="canyon">
+            <div class="card-media">
+              <img src="./assets/media/astana_galazi_poster.jpg" alt="Нео-Астана 2077" loading="lazy" />
+              <div class="media-badge" style="background:rgba(255, 122, 0, 0.85); color:#fff;">Shot 00 · Galazi Kitbash 1,618</div>
+            </div>
+            <div class="card-body">
+              <div class="card-meta-top">
+                <span class="card-kazakh-title">«Нео-Астана 2077» каньоны</span>
+                <span class="card-height">1 618 деталей</span>
+              </div>
+              <h3 class="card-title">Нео-Астана (Galazi Style)</h3>
+              <p class="card-snippet">Высокоплотный уличный каньон будущего с 8-этажными фасадами, лестницами, вентшахтами, кибер-карами и Байтереком в перспективе.</p>
+              
+              <div class="card-specs-row">
+                <div class="spec-item">
+                  <span>Объекты</span>
+                  <strong>1 618 шт</strong>
+                </div>
+                <div class="spec-item">
+                  <span>Кабели</span>
+                  <strong>22 провода</strong>
+                </div>
+                <div class="spec-item">
+                  <span>Стиль</span>
+                  <strong>Galazi Reel</strong>
+                </div>
+              </div>
+
+              <div class="card-actions">
+                <button type="button" class="btn-card-primary btn-inspect-3d">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                  </svg>
+                  <span>3D Осмотр</span>
+                </button>
+                <button type="button" class="btn-card-secondary">
+                  <span>Паспорт</span>
+                </button>
+              </div>
+            </div>
+          </article>
+
           <!-- CARD 1: BAITEREK -->
           <article class="model-card" data-model-id="baiterek">
             <div class="card-media">
@@ -282,29 +327,29 @@
             <div class="reel-badge-line">
               <span class="badge-wan">WAN 2.2 MOE 27B</span>
               <span style="color:var(--text-muted);">×</span>
-              <span class="badge-blender">BLENDER 5.3 3D</span>
+              <span class="badge-blender">BLENDER 5.3 WORKBENCH (RANDOM COLOR) × EEVEE CINEMA</span>
             </div>
-            <h3>Формат Instagram Split-Screen 9:16</h3>
-            <p>Кинематографический формат сплит-экрана, вдохновленный вирусными визуализациями: верхняя половина демонстрирует фотореалистичный рендер нейросети, а нижняя — синхронную работу 3D-вьюпорта Blender (Clay, Wireframe, Mesh) с картами Z-Depth.</p>
+            <h3>Формат Galazi 9:16 Cinema Reel (7.5s)</h3>
+            <p>Кинематографический вирусный рил в стиле Galazi: динамический пролёт сквозь футуристический каньон Нео-Астаны из 1 618 модульных ассетов kitbash с переходом от пастельного вьюпорта Blender Workbench с тенями Cavity к фотореалистичному ночному кадру с туманом и неоновыми вывесками.</p>
             
             <div class="pipeline-steps">
               <div class="step-row">
                 <span class="step-num">1</span>
-                <div><strong>Процедурное моделирование:</strong> Точная 3D-геометрия Байтерека, Хан Шатыра и Нур Алем в Blender 5.3 с анимированными камерами.</div>
+                <div><strong>Модульный китбаш 1 618 деталей:</strong> 8-этажные здания, пожарные лестницы, вентшахты, чиллеры, 22 провода, неоновые панели и кибер-кары вдоль проспекта к Байтереку.</div>
               </div>
               <div class="step-row">
                 <span class="step-num">2</span>
-                <div><strong>Z-Depth кондиционирование:</strong> Рендер карт глубины disparity для точной фиксации пространственной физики и перспективы.</div>
+                <div><strong>Blender Workbench Random Color:</strong> Визуализация уникальных пастельных тонов каждого объекта со скошенными фасками и Cavity-тенями, повторяющая фирменный почерк Galazi.</div>
               </div>
               <div class="step-row">
                 <span class="step-num">3</span>
-                <div><strong>Wan 2.2 Fun Control + MMAudio:</strong> Генерация 27B MoE нейросетевого фотореализма и стерео-саунд-дизайна 44.1 кГц.</div>
+                <div><strong>Wan 2.2 Cinema & MMAudio Foley:</strong> Высокоточный нейросетевой рендеринг атмосферы влажного асфальта, отражений неона и саунд-дизайн с 52Hz суб-басом.</div>
               </div>
             </div>
           </div>
 
           <div class="reel-visual">
-            <video src="./assets/media/shot1_baiterek_viewport.mp4" autoplay loop muted playsinline></video>
+            <video src="./assets/media/astana_galazi_reel.mp4" poster="./assets/media/astana_galazi_poster.jpg" autoplay loop muted playsinline controls></video>
           </div>
         </div>
       </div>

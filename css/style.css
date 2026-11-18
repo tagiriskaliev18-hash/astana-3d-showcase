@@ -494,8 +494,13 @@ body {
 
 .models-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 24px;
+}
+
+.model-card.featured {
+  border-color: rgba(229, 185, 95, 0.4);
+  background: rgba(24, 30, 48, 0.85);
 }
 
 .model-card {
