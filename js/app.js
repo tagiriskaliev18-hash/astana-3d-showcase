@@ -95,7 +95,8 @@ class AstanaNightCityApp {
       if (val < 0.08) {
         this.highlightPresetButton('astana_dusk');
       } else {
-        this.highlightPresetButton(this.engine.activeCyberPreset.id);
+        this.activePresetKey = this.engine.activeCyberPreset.id;
+        this.highlightPresetButton(this.activePresetKey);
       }
     });
 
@@ -107,6 +108,7 @@ class AstanaNightCityApp {
 
       if (toCyber) {
         const targetPreset = this.activePresetKey === 'astana_dusk' ? 'neon_rain' : this.activePresetKey;
+        this.activePresetKey = targetPreset;
         this.engine.setAtmospherePreset(targetPreset);
         this.highlightPresetButton(targetPreset);
       } else {
@@ -274,9 +276,17 @@ class AstanaNightCityApp {
       this.statusModeLabel.textContent = `SHIFTING REALITY -> NIGHT CITY // ${pct}%`;
       this.btnShiftText.textContent = isCyber ? 'ВЕРНУТЬ АСТАНУ' : 'INITIATE 2077 SHIFT';
     } else {
-      const p = ATMOSPHERE_PRESETS[this.engine.activeCyberPreset.id];
+      const presetId = this.engine ? this.engine.activeCyberPreset.id : this.activePresetKey;
+      const p = ATMOSPHERE_PRESETS[presetId];
       this.statusModeLabel.textContent = `NIGHT CITY OVERRIDE · ${p ? p.label : '2077'}`;
       this.btnShiftText.textContent = 'АСТАНА 2026';
+    }
+
+    if (this.engine) {
+      const presetKey = this.engine.morphAnim
+        ? this.engine.activePresetKey
+        : (level < 0.08 ? 'astana_dusk' : this.engine.activeCyberPreset.id);
+      this.highlightPresetButton(presetKey);
     }
 
     const rainVal = this.engine ? this.engine.activeCyberPreset.rainIntensity : 1.0;

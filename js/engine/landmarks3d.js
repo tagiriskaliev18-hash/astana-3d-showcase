@@ -847,7 +847,7 @@ export function buildAkOrda(pbr) {
     metalness: 0.02,
     emissive: 0x100e0b,
     emissiveIntensity: 0.06,
-    envMapIntensity: 0.24
+    envMapIntensity: 0.12
   });
 
   const marbleTrimTex = cloneTiledPBR(pbr.akordaMarble, 2, 2);
@@ -861,7 +861,19 @@ export function buildAkOrda(pbr) {
     metalness: 0.02,
     emissive: 0x12100c,
     emissiveIntensity: 0.08,
-    envMapIntensity: 0.26
+    envMapIntensity: 0.12
+  });
+
+  // Matte dark slate/bitumen architectural roof membrane (eliminates specular sky/bloom blowout on flat roofs)
+  const roofTex = cloneTiledPBR(pbr.akordaMarble, 4, 4);
+  const roofCapMat = new THREE.MeshStandardMaterial({
+    color: 0x353e4a,
+    map: roofTex.albedo,
+    normalMap: roofTex.normal,
+    normalScale: new THREE.Vector2(0.35, 0.35),
+    roughness: 0.94,
+    metalness: 0.06,
+    envMapIntensity: 0.08
   });
 
   const esplanadeMat = makePlazaMarbleMat(pbr, { color: 0x464e5a, roughness: 1.0, env: 0.22, rx: 6, ry: 8 });
@@ -943,6 +955,17 @@ export function buildAkOrda(pbr) {
     corniceGeos.push(pedTop);
   }
   group.add(new THREE.Mesh(mergeSafe(corniceGeos), trimMarbleMat));
+
+  // Matte dark slate roof membrane slabs over side wings and central pavilion roof
+  const wingRoofCap = new THREE.Mesh(new THREE.BoxGeometry(24.0, 0.25, 51.0), roofCapMat);
+  wingRoofCap.position.set(0, 21.14, 0);
+  wingRoofCap.receiveShadow = true;
+  group.add(wingRoofCap);
+
+  const centerRoofCap = new THREE.Mesh(new THREE.BoxGeometry(26.8, 0.25, 24.2), roofCapMat);
+  centerRoofCap.position.set(0, 26.08, 0);
+  centerRoofCap.receiveShadow = true;
+  group.add(centerRoofCap);
 
   // 24 Slender Tapered Neoclassical Columns w/ Square Plinth Bases & Flared Capitals
   const colGeos = [];
@@ -1099,7 +1122,7 @@ export function buildAkOrda(pbr) {
   const cyberTrimMat = new THREE.MeshStandardMaterial({
     color: 0x38d8f0,
     emissive: 0x20c8e8,
-    emissiveIntensity: 1.25,
+    emissiveIntensity: 0.72,
     roughness: 0.18
   });
   const trimLinesGeos = [];
@@ -1124,26 +1147,26 @@ export function buildAkOrda(pbr) {
   group.add(cyberTrimMesh);
 
   // Dedicated warm-gold architectural facade uplights on West & East colonnades (subtle, zero blowout!)
-  const facadeLightW = new THREE.PointLight(0xffcb82, 12, 56, 1.6);
+  const facadeLightW = new THREE.PointLight(0xffcb82, 4.5, 56, 2.0);
   facadeLightW.position.set(-20, 14, 0);
   group.add(facadeLightW);
 
-  const facadeLightE = new THREE.PointLight(0xffcb82, 12, 56, 1.6);
+  const facadeLightE = new THREE.PointLight(0xffcb82, 4.5, 56, 2.0);
   facadeLightE.position.set(20, 14, 0);
   group.add(facadeLightE);
 
-  const domeLight = new THREE.PointLight(0x38c8e8, 10, 75, 1.6);
+  const domeLight = new THREE.PointLight(0x38c8e8, 4.0, 75, 2.0);
   domeLight.position.set(0, 48, 0);
   group.add(domeLight);
 
   return {
     group,
     update(time, cyber) {
-      marbleMat.color.setHex(0xb8afa0).lerp(new THREE.Color(0x8894a2), cyber * 0.42);
+      marbleMat.color.setHex(0xb8afa0).lerp(new THREE.Color(0x768290), cyber * 0.42);
       marbleMat.emissive.setHex(0x14110b).lerp(new THREE.Color(0x0a1018), cyber);
       marbleMat.emissiveIntensity = THREE.MathUtils.lerp(0.06, 0.10, cyber);
 
-      trimMarbleMat.color.setHex(0xc4bbb0).lerp(new THREE.Color(0x96a2b0), cyber * 0.38);
+      trimMarbleMat.color.setHex(0xc4bbb0).lerp(new THREE.Color(0x828e9c), cyber * 0.38);
       trimMarbleMat.emissive.setHex(0x16120c).lerp(new THREE.Color(0x0c141d), cyber);
       trimMarbleMat.emissiveIntensity = THREE.MathUtils.lerp(0.07, 0.12, cyber);
 
@@ -1152,7 +1175,7 @@ export function buildAkOrda(pbr) {
       winMat.emissiveIntensity = THREE.MathUtils.lerp(0.72, 1.12, cyber);
 
       cyberTrimMesh.visible = cyber > 0.14;
-      cyberTrimMat.emissiveIntensity = cyber * 1.1;
+      cyberTrimMat.emissiveIntensity = cyber * 0.72;
 
       holoDome.visible = cyber > 0.16;
       holoDome.rotation.y = time * 0.16;
@@ -1160,9 +1183,9 @@ export function buildAkOrda(pbr) {
 
       facadeLightW.color.setHex(0xffd088).lerp(new THREE.Color(0xc8dce8), cyber * 0.32);
       facadeLightE.color.setHex(0xffd088).lerp(new THREE.Color(0xc8dce8), cyber * 0.32);
-      facadeLightW.intensity = THREE.MathUtils.lerp(6, 9, cyber);
-      facadeLightE.intensity = THREE.MathUtils.lerp(6, 9, cyber);
-      domeLight.intensity = THREE.MathUtils.lerp(5, 10, cyber);
+      facadeLightW.intensity = THREE.MathUtils.lerp(3.0, 4.5, cyber);
+      facadeLightE.intensity = THREE.MathUtils.lerp(3.0, 4.5, cyber);
+      domeLight.intensity = THREE.MathUtils.lerp(2.0, 4.0, cyber);
     }
   };
 }
