@@ -3,457 +3,232 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Астана 3D · Цифровой Двойник & Архитектурные Модели Столицы</title>
-  <meta name="description" content="Интерактивный 3D-двойник и архитектурный атлас Астаны: Байтерек, Хан Шатыр, Сфера Нур Алем. 3D-модели в реальном времени, Blender Viewport, режимы Wireframe/Clay/Depth и синхронизация с AI Wan 2.2." />
-  
-  <!-- Favicon / Meta -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
+  <title>ASTANA // NIGHT CITY 2077 — Интерактивный 3D-Мегаполис</title>
+  <meta
+    name="description"
+    content="Интерактивная 3D-трансформация Астаны в Night City 2077 на Three.js WebGL: Байтерек, Хан Шатыр, Abu Dhabi Plaza, Нур Алем, Акорда, Пирамида и река Есиль."
+  />
+
+  <!-- Crisp SVG Favicon (Zero Emoji) -->
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2305070D'/%3E%3Cpolygon points='32,6 56,54 8,54' fill='none' stroke='%23FCEE0A' stroke-width='4'/%3E%3Ccircle cx='32' cy='26' r='8' fill='%2300F0FF'/%3E%3C/svg%3E"
+  />
+
+  <!-- Cyberpunk Display & Mono Fonts with clean system fallbacks -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@600;700;800;900&family=Rajdhani:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
   <link rel="stylesheet" href="./css/style.css" />
 
-  <!-- Import Map for Three.js ES Modules -->
+  <!-- Zero-Bundler Three.js r170 ES Modules Importmap -->
   <script type="importmap">
   {
     "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
     }
   }
   </script>
 </head>
-<body>
-  <div class="bg-ambient"></div>
+<body class="mode-cyber">
+  <!-- FULL-BLEED 100VW x 100VH WEBGL STAGE -->
+  <canvas id="scene-canvas" aria-label="Интерактивная 3D сцена Астана Night City 2077"></canvas>
 
-  <!-- SITE HEADER -->
-  <header class="site-header">
-    <div class="site-container header-content">
-      <a href="#hero" class="brand-badge">
-        <div class="brand-symbol">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <h1>Astana 3D City</h1>
-          <p>Digital Twin & Architecture</p>
-        </div>
-      </a>
+  <!-- Subtle cinematic edge vignette + transient shift glitch sweep -->
+  <div class="stage-vignette" aria-hidden="true"></div>
+  <div class="shift-flash-overlay" id="shift-flash" aria-hidden="true"></div>
 
-      <div class="nav-controls">
-        <div class="pill-tag">
-          <span class="pulse-dot"></span>
-          <span>Blender 5.3 · Three.js · WebGL</span>
-        </div>
-
-        <button type="button" class="btn-icon" id="btn-audio-toggle" title="Включить атмосферный саундтрек" aria-label="Звук">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
-          </svg>
-        </button>
-
-        <button type="button" class="btn-icon" id="btn-fullscreen" title="Во весь экран" aria-label="Fullscreen">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
-          </svg>
-        </button>
-
-        <a href="https://github.com/tagiriskaliev18-hash/astana-3d-showcase" target="_blank" rel="noopener noreferrer" class="btn-icon" title="Исходный код на GitHub" aria-label="GitHub">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
-          </svg>
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    <!-- HERO / 3D INTERACTIVE VIEWPORT -->
-    <section class="hero-stage" id="hero">
-      <div class="site-container">
-        <div class="stage-header">
-          <span class="stage-kicker">Интерактивный 3D-Атлас Столицы</span>
-          <h2 class="stage-title">Архитектурные Шедевры <span>Астаны</span></h2>
-          <p class="stage-desc">Вращайте, приближайте и исследуйте реальные 3D-модели главных достопримечательностей столицы в различных режимах рендера.</p>
-        </div>
-
-        <div class="viewport-wrapper">
-          <!-- 3D WebGL Canvas -->
-          <canvas id="webgl-canvas"></canvas>
-
-          <!-- Top-Left HUD Info -->
-          <div class="viewport-hud" id="viewport-hud">
-            <div class="hud-pill">Инициализация сцены...</div>
-          </div>
-
-          <!-- Top-Right Model Switcher Tabs -->
-          <div class="model-selector-bar">
-            <button type="button" class="model-tab-btn" data-model="canyon">🏙️ Нео-Астана (1,618 деталей)</button>
-            <button type="button" class="model-tab-btn active" data-model="baiterek">🏛️ Байтерек</button>
-            <button type="button" class="model-tab-btn" data-model="khanshatyr">⛺ Хан Шатыр</button>
-            <button type="button" class="model-tab-btn" data-model="nuralem">🌐 Нур Алем</button>
-            <button type="button" class="model-tab-btn" data-model="astana_full">🏙️ Вся Панорама</button>
-          </div>
-
-          <!-- Bottom Control Bar (Shading + Viewport Tools) -->
-          <div class="viewport-bottom-bar">
-            <div class="shading-modes">
-              <button type="button" class="shading-btn active" data-shading="pbr">💎 PBR Studio</button>
-              <button type="button" class="shading-btn" data-shading="wireframe">🟧 Wireframe</button>
-              <button type="button" class="shading-btn" data-shading="clay">⬜ Clay Solid</button>
-              <button type="button" class="shading-btn" data-shading="random">🎨 Random Pastel</button>
-              <button type="button" class="shading-btn" data-shading="depth">🌊 Z-Depth</button>
-            </div>
-
-            <div class="bar-divider"></div>
-
-            <div class="viewport-tools">
-              <button type="button" class="tool-btn" id="btn-reset-view" title="Сбросить ракурс камеры" aria-label="Сброс камеры">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                  <path d="M3 3v5h5"/>
-                </svg>
-              </button>
-              <button type="button" class="tool-btn active" id="btn-auto-rotate" title="Автоматическое вращение" aria-label="Авто-вращение">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Loading Overlay -->
-          <div class="viewport-loader visible" id="viewport-loader">
-            <div class="spinner"></div>
-            <div class="loader-text">Загрузка 3D-модели...</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ARCHITECTURAL MODELS CATALOG SECTION -->
-    <section class="catalog-section" id="catalog">
-      <div class="site-container">
-        <div class="section-head">
-          <div>
-            <h2>Коллекция Моделей</h2>
-            <p>Нажмите на любую карточку, чтобы открыть детальный архитектурный паспорт и видео-сравнение</p>
-          </div>
-          <div class="instruction-hint">
-            <span>👆 Кликните для чтения описания</span>
-          </div>
-        </div>
-
-        <div class="models-grid">
-          <!-- CARD 0: NEO-ASTANA CANYON (GALAZI STYLE) -->
-          <article class="model-card featured" data-model-id="canyon">
-            <div class="card-media">
-              <img src="./assets/media/astana_galazi_poster.jpg" alt="Нео-Астана 2077" loading="lazy" />
-              <div class="media-badge" style="background:rgba(255, 122, 0, 0.85); color:#fff;">Shot 00 · Galazi Kitbash 1,618</div>
-            </div>
-            <div class="card-body">
-              <div class="card-meta-top">
-                <span class="card-kazakh-title">«Нео-Астана 2077» каньоны</span>
-                <span class="card-height">1 618 деталей</span>
-              </div>
-              <h3 class="card-title">Нео-Астана (Galazi Style)</h3>
-              <p class="card-snippet">Высокоплотный уличный каньон будущего с 8-этажными фасадами, лестницами, вентшахтами, кибер-карами и Байтереком в перспективе.</p>
-              
-              <div class="card-specs-row">
-                <div class="spec-item">
-                  <span>Объекты</span>
-                  <strong>1 618 шт</strong>
-                </div>
-                <div class="spec-item">
-                  <span>Кабели</span>
-                  <strong>22 провода</strong>
-                </div>
-                <div class="spec-item">
-                  <span>Стиль</span>
-                  <strong>Galazi Reel</strong>
-                </div>
-              </div>
-
-              <div class="card-actions">
-                <button type="button" class="btn-card-primary btn-inspect-3d">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                  </svg>
-                  <span>3D Осмотр</span>
-                </button>
-                <button type="button" class="btn-card-secondary">
-                  <span>Паспорт</span>
-                </button>
-              </div>
-            </div>
-          </article>
-
-          <!-- CARD 1: BAITEREK -->
-          <article class="model-card" data-model-id="baiterek">
-            <div class="card-media">
-              <img src="./assets/media/thumb_baiterek.jpg" alt="Монумент Байтерек" loading="lazy" />
-              <div class="media-badge">Shot 01 · Clay Viewport</div>
-            </div>
-            <div class="card-body">
-              <div class="card-meta-top">
-                <span class="card-kazakh-title">«Бәйтерек» монументі</span>
-                <span class="card-height">105 м</span>
-              </div>
-              <h3 class="card-title">Монумент «Астана-Байтерек»</h3>
-              <p class="card-snippet">Символ независимого Казахстана, мифическое Древо Жизни с золотым яйцом священной птицы Самрук в кроне на берегу Мировой реки.</p>
-              
-              <div class="card-specs-row">
-                <div class="spec-item">
-                  <span>Год постройки</span>
-                  <strong>2002</strong>
-                </div>
-                <div class="spec-item">
-                  <span>Диаметр сферы</span>
-                  <strong>22 метра</strong>
-                </div>
-                <div class="spec-item">
-                  <span>Стекло</span>
-                  <strong>Хамелеон</strong>
-                </div>
-              </div>
-
-              <div class="card-actions">
-                <button type="button" class="btn-card-primary btn-inspect-3d">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                  </svg>
-                  <span>3D Осмотр</span>
-                </button>
-                <button type="button" class="btn-card-secondary">
-                  <span>Паспорт</span>
-                </button>
-              </div>
-            </div>
-          </article>
-
-          <!-- CARD 2: KHAN SHATYR -->
-          <article class="model-card" data-model-id="khanshatyr">
-            <div class="card-media">
-              <img src="./assets/media/thumb_khanshatyr.jpg" alt="ТРЦ Хан Шатыр" loading="lazy" />
-              <div class="media-badge">Shot 02 · Wireframe Viewport</div>
-            </div>
-            <div class="card-body">
-              <div class="card-meta-top">
-                <span class="card-kazakh-title">«Хан Шатыр» сауда орталығы</span>
-                <span class="card-height">150 м</span>
-              </div>
-              <h3 class="card-title">ТРЦ «Хан Шатыр»</h3>
-              <p class="card-snippet">Крупнейшее в мире шатровое сооружение Нормана Фостера в форме косого конуса из энергоэффективного полимера ETFE с мальдивским пляжем внутри.</p>
-              
-              <div class="card-specs-row">
-                <div class="spec-item">
-                  <span>Архитектор</span>
-                  <strong>Н. Фостер</strong>
-                </div>
-                <div class="spec-item">
-                  <span>Площадь</span>
-                  <strong>127 000 м²</strong>
-                </div>
-                <div class="spec-item">
-                  <span>Микроклимат</span>
-                  <strong>+24°C зима/лето</strong>
-                </div>
-              </div>
-
-              <div class="card-actions">
-                <button type="button" class="btn-card-primary btn-inspect-3d">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                  </svg>
-                  <span>3D Осмотр</span>
-                </button>
-                <button type="button" class="btn-card-secondary">
-                  <span>Паспорт</span>
-                </button>
-              </div>
-            </div>
-          </article>
-
-          <!-- CARD 3: NUR ALEM & ABU DHABI PLAZA -->
-          <article class="model-card" data-model-id="nuralem">
-            <div class="card-media">
-              <img src="./assets/media/thumb_nuralem.jpg" alt="Сфера Нур Алем и Абу-Даби Плаза" loading="lazy" />
-              <div class="media-badge">Shot 03 · Geodesic Mesh</div>
-            </div>
-            <div class="card-body">
-              <div class="card-meta-top">
-                <span class="card-kazakh-title">«Нұр Әлем» & Әбу-Даби</span>
-                <span class="card-height">80м / 311м</span>
-              </div>
-              <h3 class="card-title">Сфера «Нур Алем» & Abu Dhabi</h3>
-              <p class="card-snippet">Самое большое сферическое здание на планете (Музей энергии будущего EXPO) на фоне высочайшего небоскреба Центральной Азии (311 метров).</p>
-              
-              <div class="card-specs-row">
-                <div class="spec-item">
-                  <span>Стекла 3D-формы</span>
-                  <strong>2 824 панели</strong>
-                </div>
-                <div class="spec-item">
-                  <span>Ветрогенерация</span>
-                  <strong>2 ротора</strong>
-                </div>
-                <div class="spec-item">
-                  <span>Небоскреб</span>
-                  <strong>75 этажей</strong>
-                </div>
-              </div>
-
-              <div class="card-actions">
-                <button type="button" class="btn-card-primary btn-inspect-3d">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                  </svg>
-                  <span>3D Осмотр</span>
-                </button>
-                <button type="button" class="btn-card-secondary">
-                  <span>Паспорт</span>
-                </button>
-              </div>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- PIPELINE & REEL FORMAT SHOWCASE -->
-    <section class="reel-section">
-      <div class="site-container">
-        <div class="reel-banner">
-          <div class="reel-info">
-            <div class="reel-badge-line">
-              <span class="badge-wan">WAN 2.2 MOE 27B</span>
-              <span style="color:var(--text-muted);">×</span>
-              <span class="badge-blender">BLENDER 5.3 WORKBENCH (RANDOM COLOR) × EEVEE CINEMA</span>
-            </div>
-            <h3>Формат Galazi 9:16 Cinema Reel (7.5s)</h3>
-            <p>Кинематографический вирусный рил в стиле Galazi: динамический пролёт сквозь футуристический каньон Нео-Астаны из 1 618 модульных ассетов kitbash с переходом от пастельного вьюпорта Blender Workbench с тенями Cavity к фотореалистичному ночному кадру с туманом и неоновыми вывесками.</p>
-            
-            <div class="pipeline-steps">
-              <div class="step-row">
-                <span class="step-num">1</span>
-                <div><strong>Модульный китбаш 1 618 деталей:</strong> 8-этажные здания, пожарные лестницы, вентшахты, чиллеры, 22 провода, неоновые панели и кибер-кары вдоль проспекта к Байтереку.</div>
-              </div>
-              <div class="step-row">
-                <span class="step-num">2</span>
-                <div><strong>Blender Workbench Random Color:</strong> Визуализация уникальных пастельных тонов каждого объекта со скошенными фасками и Cavity-тенями, повторяющая фирменный почерк Galazi.</div>
-              </div>
-              <div class="step-row">
-                <span class="step-num">3</span>
-                <div><strong>Wan 2.2 Cinema & MMAudio Foley:</strong> Высокоточный нейросетевой рендеринг атмосферы влажного асфальта, отражений неона и саунд-дизайн с 52Hz суб-басом.</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="reel-visual">
-            <video src="./assets/media/astana_galazi_reel.mp4" poster="./assets/media/astana_galazi_poster.jpg" autoplay loop muted playsinline controls></video>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- ARCHITECTURAL DOSSIER MODAL -->
-  <div class="modal-overlay" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal-container">
-      <div class="modal-header">
-        <div class="modal-header-titles">
-          <p id="modal-kz-title">«Бәйтерек» монументі</p>
-          <h3 id="modal-title">Монумент «Астана-Байтерек»</h3>
-        </div>
-        <button type="button" class="btn-close-modal" id="btn-close-modal" aria-label="Закрыть">✕</button>
-      </div>
-
-      <div class="modal-body">
-        <!-- Media Switcher Box -->
-        <div>
-          <div class="modal-media-tabs">
-            <button type="button" class="tab-media-btn active" data-media="viewport">🎥 3D Viewport Render</button>
-            <button type="button" class="tab-media-btn" data-media="depth">🌊 Z-Depth Disparity Pass</button>
-          </div>
-          <div class="modal-player-box">
-            <video id="modal-video-player" controls loop playsinline></video>
-          </div>
-        </div>
-
-        <!-- Quick Stats Grid -->
-        <div class="dossier-grid" id="modal-dossier-stats">
-          <!-- Injected via JS -->
-        </div>
-
-        <!-- History & Description -->
-        <div class="modal-text-block">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
-            Архитектурная концепция и история
-          </h4>
-          <div id="modal-desc-text">
-            <!-- Injected via JS -->
-          </div>
-        </div>
-
-        <!-- Technical Specs -->
-        <div class="modal-text-block">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-              <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-              <line x1="6" y1="6" x2="6.01" y2="6"/>
-              <line x1="6" y1="18" x2="6.01" y2="18"/>
-            </svg>
-            Инженерные спецификации
-          </h4>
-          <div id="modal-specs-list">
-            <!-- Injected via JS -->
-          </div>
-        </div>
-
-        <!-- Interesting Facts -->
-        <div class="modal-text-block">
-          <h4>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="16" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12.01" y2="8"/>
-            </svg>
-            Интересные факты
-          </h4>
-          <ul class="facts-list" id="modal-facts-list">
-            <!-- Injected via JS -->
-          </ul>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button type="button" class="btn-card-primary" onclick="window.astanaApp.closeDossier();">
-          <span>Закрыть окно</span>
-        </button>
-      </div>
+  <!-- BOOT LOADER OVERLAY -->
+  <div class="boot-overlay" id="boot-overlay">
+    <div class="boot-frame">
+      <div class="boot-kicker">NURZHOL NEURAL GRID // INITIALIZING</div>
+      <div class="boot-title">ASTANA <span>2077</span></div>
+      <div class="boot-bar"><div class="boot-bar-fill"></div></div>
+      <div class="boot-sub">COMPILING SHADERS · BAITEREK · KHAN SHATYR · ESIL RIVER</div>
     </div>
   </div>
 
-  <!-- SITE FOOTER -->
-  <footer class="site-footer">
-    <div class="site-container footer-content">
-      <div>
-        <p><strong>Astana 3D Digital Twin</strong> · Разработано Тагиром (<a href="https://github.com/tagiriskaliev18-hash" target="_blank" style="color:var(--gold-primary);">@tagiriskaliev18-hash</a>)</p>
-        <p style="margin-top:4px; font-size:0.75rem;">Blender 5.3 · Three.js WebGL · Wan 2.2 Diffusion MoE · GLTF 2.0</p>
+  <!-- DIEGETIC CYBERPUNK 2077 HUD LAYER -->
+  <div class="hud-layer" id="hud-layer">
+    <!-- TOP BAR -->
+    <header class="hud-top">
+      <!-- Brand & Telemetry -->
+      <div class="hud-panel brand-panel">
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 28 28" width="22" height="22" fill="none">
+              <circle cx="14" cy="9" r="5" stroke="#FCEE0A" stroke-width="2" />
+              <path d="M8 25 C10 17, 11 14, 14 14 C17 14, 18 17, 20 25" stroke="#00F0FF" stroke-width="1.8" />
+              <path d="M5 25 L23 25" stroke="#FCEE0A" stroke-width="1.8" />
+            </svg>
+          </div>
+          <div class="brand-titles">
+            <h1 class="brand-title">ASTANA <span class="slash">//</span> <span class="accent-year">2077</span></h1>
+            <div class="brand-sub" id="status-mode-label">NIGHT CITY OVERRIDE · NURZHOL SECTOR</div>
+          </div>
+          <div class="shift-pct-badge" id="hud-cyber-pct">100%</div>
+        </div>
+        <div class="telemetry-strip">
+          <span class="tele-item"><span class="tele-dot"></span><span id="tele-coords">51°07'42" N · 71°25'50" E</span></span>
+          <span class="tele-sep">/</span>
+          <span class="tele-item">ALT <strong id="tele-alt">108M</strong></span>
+          <span class="tele-sep">/</span>
+          <span class="tele-item"><strong id="tele-fps">60</strong> FPS</span>
+        </div>
       </div>
 
-      <div class="footer-links">
-        <a href="#hero">В начало</a>
-        <a href="#catalog">Модели</a>
-        <a href="https://github.com/tagiriskaliev18-hash/astana-3d-showcase" target="_blank" rel="noopener noreferrer">GitHub Репозиторий</a>
+      <!-- Camera Modes + Atmosphere Presets + Utilities -->
+      <div class="hud-top-right">
+        <!-- Atmosphere Presets -->
+        <div class="hud-panel control-strip" role="group" aria-label="Атмосфера">
+          <span class="strip-label">ATMO</span>
+          <button type="button" class="chip-btn active" data-preset="neon_rain">NEON RAIN</button>
+          <button type="button" class="chip-btn" data-preset="blade_runner">BLADE RUNNER</button>
+          <button type="button" class="chip-btn" data-preset="astana_dusk">ASTANA DUSK</button>
+          <button type="button" class="chip-btn" data-preset="emp_overdrive">EMP OVERDRIVE</button>
+        </div>
+
+        <!-- Camera Mode + Utility Tools -->
+        <div class="hud-panel control-strip" role="group" aria-label="Камера и инструменты">
+          <span class="strip-label">CAM</span>
+          <button type="button" class="chip-btn active" data-cam="orbit" title="Свободное вращение мышью">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="8" cy="8" r="5.5" />
+              <ellipse cx="8" cy="8" rx="5.5" ry="2.2" />
+            </svg>
+            <span>ORBIT</span>
+          </button>
+          <button type="button" class="chip-btn" data-cam="tour" title="Кинематографический облёт столицы">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M2 8a6 6 0 1 1 1.6 4.1" />
+              <polyline points="2 13 2 9 6 9" />
+            </svg>
+            <span>AUTO-TOUR</span>
+          </button>
+          <button type="button" class="chip-btn" data-cam="drone" title="Свободный полёт WASD + мышь">
+            <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5">
+              <polygon points="8 2 14 13 8 10.5 2 13 8 2" />
+            </svg>
+            <span>DRONE</span>
+          </button>
+
+          <span class="strip-divider"></span>
+
+          <button type="button" class="icon-btn" id="btn-dossier" title="Досье объекта [I]" aria-label="Архитектурное досье">
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7">
+              <rect x="3" y="3" width="14" height="14" rx="1" />
+              <line x1="6.5" y1="7.5" x2="13.5" y2="7.5" />
+              <line x1="6.5" y1="10.5" x2="13.5" y2="10.5" />
+              <line x1="6.5" y1="13.5" x2="10.5" y2="13.5" />
+            </svg>
+          </button>
+
+          <button type="button" class="icon-btn" id="btn-audio" title="Включить Cyberpunk синт и шум дождя" aria-label="Аудио">
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7">
+              <polygon points="9 4.5 5 8 2 8 2 12 5 12 9 15.5 9 4.5" />
+              <path class="audio-wave" d="M12.5 7.2a4.2 4.2 0 0 1 0 5.6M15.2 4.8a7.4 7.4 0 0 1 0 10.4" />
+              <line class="audio-mute" x1="12.5" y1="7.5" x2="17.5" y2="12.5" />
+              <line class="audio-mute" x1="17.5" y1="7.5" x2="12.5" y2="12.5" />
+            </svg>
+          </button>
+
+          <button type="button" class="icon-btn" id="btn-hide-hud" title="Скрыть интерфейс [H]" aria-label="Скрыть HUD">
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M2 10s3.2-5 8-5 8 5 8 5-3.2 5-8 5-8-5-8-5z" />
+              <circle cx="10" cy="10" r="2.3" />
+            </svg>
+          </button>
+
+          <button type="button" class="icon-btn" id="btn-fullscreen" title="На весь экран" aria-label="Полноэкранный режим">
+            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7">
+              <path d="M3 7V3h4M17 7V3h-4M3 13v4h4M17 13v4h-4" />
+            </svg>
+          </button>
+        </div>
       </div>
+    </header>
+
+    <!-- DRONE FLIGHT HINT TOAST -->
+    <div class="drone-toast" id="drone-toast">
+      <span>DRONE ACTIVE</span> · WASD движение · Q/E высота · Перетаскивание мышью — обзор · SHIFT ускорение
     </div>
-  </footer>
 
-  <!-- App Bootstrap (ES Modules) -->
+    <!-- COLLAPSIBLE ARCHITECTURAL & 2077 LORE DOSSIER DRAWER -->
+    <aside class="hud-panel dossier-drawer" id="dossier-drawer" aria-label="Архитектурное досье">
+      <div class="dossier-head">
+        <div>
+          <div class="dossier-code" id="dossier-code">SEC-00 // ЛЕВЫЙ БЕРЕГ</div>
+          <h2 class="dossier-title" id="dossier-title">Астана // Night City 2077</h2>
+          <div class="dossier-kz" id="dossier-kz">НҰРЖОЛ БУЛЬВАРЫ · МЕГАПОЛИС</div>
+        </div>
+        <button type="button" class="icon-btn" id="btn-close-dossier" aria-label="Закрыть досье">
+          <svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="5" x2="15" y2="15" />
+            <line x1="15" y1="5" x2="5" y2="15" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="dossier-stats" id="dossier-stats"></div>
+
+      <div class="dossier-block">
+        <div class="dossier-block-label">REAL ARCHITECTURE · АСТАНА</div>
+        <p id="dossier-real-desc"></p>
+      </div>
+
+      <div class="dossier-block cyber-lore-block">
+        <div class="dossier-block-label">NIGHT CITY 2077 · OVERRIDE LORE</div>
+        <p id="dossier-cyber-lore"></p>
+      </div>
+    </aside>
+
+    <!-- BOTTOM COMMAND DECK: LIVE SHIFT SLIDER + LANDMARK QUICK-JUMP DOCK -->
+    <footer class="hud-bottom">
+      <!-- ASTANA REALITY <-> NIGHT CITY 2077 TRANSFORMATION DECK -->
+      <div class="hud-panel morph-deck">
+        <div class="morph-slider-wrap">
+          <span class="morph-endpoint morph-real" id="label-real">АСТАНА 2026</span>
+          <div class="slider-track-shell">
+            <input
+              type="range"
+              id="cyber-slider"
+              class="cyber-slider"
+              min="0"
+              max="100"
+              value="100"
+              aria-label="Степень трансформации Астаны в Night City 2077"
+            />
+            <div class="slider-fill" id="slider-fill"></div>
+          </div>
+          <span class="morph-endpoint morph-cyber" id="label-cyber">NIGHT CITY 2077</span>
+        </div>
+
+        <button type="button" class="btn-shift-cta" id="btn-shift-toggle">
+          <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="10 1 3 10 9 10 8 17 15 8 9 8 10 1" />
+          </svg>
+          <span id="btn-shift-text">АСТАНА &larr; NIGHT CITY</span>
+        </button>
+      </div>
+
+      <!-- LANDMARK QUICK-JUMP DOCK -->
+      <nav class="hud-panel landmark-dock" id="landmark-dock" aria-label="Навигация по достопримечательностям Астаны">
+        <!-- Populated cleanly via js/app.js from LANDMARKS -->
+      </nav>
+    </footer>
+  </div>
+
+  <!-- MINIMAL RESTORE CHIP WHEN HUD IS HIDDEN [H] -->
+  <button type="button" class="hud-restore-chip" id="btn-restore-hud" title="Показать интерфейс [H]">
+    <span>SHOW HUD</span> <kbd>H</kbd>
+  </button>
+
   <script type="module" src="./js/app.js"></script>
 </body>
 </html>

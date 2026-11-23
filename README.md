@@ -1,85 +1,51 @@
-# 🏛️ Astana 3D City · Digital Twin & Architectural Atlas
+# ASTANA // NIGHT CITY 2077 — Interactive 3D WebGL Showcase
 
-> **Интерактивный 3D-двойник и архитектурный атлас Астаны (Казахстан)**: Байтерек, Хан Шатыр, Сфера «Нур Алем» и небоскреб Abu Dhabi Plaza.
-> Интерактивные 3D-модели в реальном времени на Three.js, режимы рендера (PBR Studio / Wireframe / Clay / Z-Depth), подробные архитектурные паспорта и синхронизированные видео-пасы Blender 5.3 + Wan 2.2 AI.
+> Real-time interactive 3D transformation of **Astana, Kazakhstan** into **Cyberpunk 2077 Night City** — featuring Astana's iconic recognizable architecture along Nurzhol Boulevard and the Esil River, built with zero-bundler Three.js r170 ES Modules, custom GLSL shaders, and HDR UnrealBloom post-processing.
 
-🌐 **Live Demo на GitHub Pages**: [https://tagiriskaliev18-hash.github.io/astana-3d-showcase/](https://tagiriskaliev18-hash.github.io/astana-3d-showcase/)
-
----
-
-## ✨ Ключевые возможности
-
-- 🏙️ **Интерактивный 3D WebGL движок (Three.js)**:
-  - Свободное вращение (360° Orbit), масштабирование, панорамирование и кинематографическое авто-вращение.
-  - Мгновенное переключение между ключевыми достопримечательностями и панорамой города.
-  - Прямое нажатие на 3D-модель в сцене для вызова паспорта объекта.
-
-- 🎨 **4 Режима шейдинга на лету**:
-  - **💎 PBR Studio**: Реалистичные PBR-материалы (золотой шар Байтерека, стекло-хамелеон, динамическое солнце и мягкие тени).
-  - **🟧 Wireframe**: Оранжевая полигональная сетка на темном фоне в стилистике Blender Viewport и вирусных Instagram Reels (`AI x blender`).
-  - **⬜ Clay Solid**: Чистый матовый архитектурный гипс для оценки форм и пластики фасадов.
-  - **🌊 Z-Depth**: Карта пространственной глубины disparity, используемая для управления нейросетью Wan 2.2.
-
-- 📖 **Подробные Архитектурные Паспорта**:
-  - При клике на карточку или 3D-модель открывается интерактивное досье с историей создания, именами архитекторов (Норман Фостер, Акмурза Рустембеков, Альберт Шпеер), мифологией (птица Самрук, Древо Жизни Байтерек) и инженерными фактами.
-  - Встроенный видеоплеер с переключением между оригинальным рендером 3D-вьюпорта Blender и картой Z-Depth.
-
-- 🎵 **Процедурный Саундскейп**:
-  - Генерация атмосферного звука через Web Audio API: шепот степного ветра Сарыарки и футуристический эмбиент без тяжелых аудиофайлов.
+**Live Demo (GitHub Pages):** [https://tagiriskaliev18-hash.github.io/astana-3d-showcase/](https://tagiriskaliev18-hash.github.io/astana-3d-showcase/)
 
 ---
 
-## 🏛️ Представленные Модели
+## Core Features
 
-| Модель | Название | Высота | Архитектор | Описание |
-| :--- | :--- | :--- | :--- | :--- |
-| **Baiterek** | Монумент «Астана-Байтерек» | 105 м | А. Рустембеков / Н. Фостер | Древо жизни с 300-тонной золотой сферой Самрук (стекло-хамелеон 22 м) |
-| **Khan Shatyr** | ТРЦ «Хан Шатыр» | 150 м | Сэр Норман Фостер | Крупнейший в мире шатер, асимметричный конус из ETFE с пляжем Sky Beach |
-| **Nur Alem & Abu Dhabi** | Сфера «Нур Алем» + Abu Dhabi Plaza | 80 м / 311 м | Albert Speer / Adrian Smith | Единственная в мире сферическая эко-постройка + высочайший небоскреб ЦА |
-| **Full City** | Панорама Астаны | — | Комплекс столицы | Полная 3D-диджитал-твин панорама бульвара Нуржол и EXPO |
-
----
-
-## 🎬 Конвейер (Blender 5.3 + Wan 2.2 Fun Control)
-
-Проект разработан в развитие концепции кинематографических Instagram Reels формата `AI x blender` (сплит-экран 9:16):
-1. **Procedural 3D Modeling (Blender 5.3)**:
-   - Процедурная генерация архитектурных сеток, колоннад, вантовых систем и наклонных конструкций.
-   - Рендер вьюпорта камеры и расчет disparity depth pass.
-2. **Export to WebGL**:
-   - Оптимизированный экспорт в компактные бинарные `.glb` контейнеры (суммарно < 1 МБ на все здания столицы).
-3. **AI Video Sync**:
-   - Подача Z-depth видеопотока в нейросеть Wan 2.2 Fun Control (27B MoE) для генерации фотореализма с сохранением физики камеры 1:1.
+- **Real-Time ASTANA 2026 <-> NIGHT CITY 2077 Morph (`0%` to `100%`):**
+  - Live interactive morph slider + one-click dramatic **SHIFT** toggle smoothly transforms the sky dome, lighting, atmospheric smog, skyscraper window matrices, Esil River neon reflections, wet rain-slicked roads, landmark holograms, sweeping searchlights, flying AV spinner traffic, and pouring neon rain in real time.
+- **Recognizable Iconic Astana Landmarks along Nurzhol Boulevard & Esil River:**
+  - **Baiterek Tower (105m):** 18 flared steel tree-of-life ribs, panoramic glass lift shaft, chameleon-gold Samruk sphere morphing into a glowing cyber-amber net-core with spinning holographic data rings and skyward laser beam.
+  - **Khan Shatyr (150m):** Norman Foster's 15-degree tilted translucent tensile ETFE tent with radial cable ribs and internal tripod mast, shifting from warm sunlit champagne to pulsing magenta/cyan cyberpunk neon.
+  - **Abu Dhabi Plaza (311m):** Central Asia's tallest stepped 4-tier supertall arcology with procedural GLSL window grids, vertical neon architectural fins, rooftop helipad, and colossal holographic billboards (`QAZ-CORP`, `ASTANA 2077`).
+  - **Nur Alem / EXPO Sphere (100m):** Full geodesic glass sphere with twin rooftop wind-turbine rotors, inner luminous exhibition decks, pulsing quantum core, and orbiting equatorial ring.
+  - **Ak Orda Presidential Palace:** Neoclassical marble facade with East/West colonnades, turquoise-blue dome with holographic cyber grid, and golden needle spire overlooking the Esil River.
+  - **Palace of Peace & Reconciliation (Pyramid):** 62m geometric granite-and-glass pyramid across the Esil River with glowing stained-glass apex and neon ridge tracing.
+  - **Skyline & Urban Infrastructure:** Emerald Towers, Northern Lights, Triumph of Astana, Esil River with animated neon reflection water shader, illuminated parabolic arched bridges, pedestrian skybridges, and an elevated cyber-monorail with an animated maglev train.
+- **AAA Three.js WebGL Rendering Pipeline:**
+  - `EffectComposer` + `RenderPass` + `UnrealBloomPass` + `OutputPass` with `ACESFilmicToneMapping` and procedural `PMREMGenerator` neon environment map.
+  - 7 custom GLSL shaders (Sky Dome, Instanced Anti-Aliased Skyscraper Window Matrix, Esil River Water, Wet Rain-Puddle Boulevard, Holographic Mega-Billboards, Volumetric Fresnel Searchlights, GPU-driven Neon Rain Streaks).
+- **Cyberpunk 2077 Diegetic HUD & Controls:**
+  - Full-bleed `100vw x 100vh` viewport with collapsible Architectural & 2077 Lore Dossier (`I`), 8 Landmark Quick-Jump presets (`1`–`8`), 4 Atmosphere presets (`NEON RAIN`, `BLADE RUNNER`, `ASTANA DUSK`, `EMP OVERDRIVE`), 3 Camera modes (`ORBIT`, `AUTO-TOUR`, `DRONE` WASD + mouse), Hide HUD (`H`), and optional procedural Web Audio Cyberpunk synth & rain soundscape.
 
 ---
 
-## 🚀 Локальный запуск
+## Local Run
 
-Сайт полностью статичен и не требует сборщиков:
+Static zero-bundler ES modules — runs directly via any local static server:
 
 ```bash
-# Клонируйте репозиторий
-git clone https://github.com/tagiriskaliev18-hash/astana-3d-showcase.git
-cd astana-3d-showcase
-
-# Запустите любой локальный статический сервер, например:
 python -m http.server 8000
-# или
-npx serve .
+# Open http://localhost:8000/
 ```
 
-Откройте в браузере `http://localhost:8000/`.
-
 ---
 
-## 🛠️ Стек технологий
+## Project Structure
 
-- **3D Graphics**: [Three.js](https://threejs.org/) (r160) · WebGL · GLTF 2.0
-- **3D Creation**: [Blender 5.3](https://www.blender.org/) (Cycles & Viewport Render Engine)
-- **AI Cinema Conditioning**: Wan 2.2 Diffusion MoE Fun Control (Depth-to-Video)
-- **Audio**: Web Audio API (Procedural Synthesizer & Noise Filter)
-- **Deployment**: GitHub Pages
-
----
-
-👤 **Автор**: Тагир ([@tagiriskaliev18-hash](https://github.com/tagiriskaliev18-hash))
+- `index.html` — Full-bleed WebGL stage, Cyberpunk 2077 diegetic HUD, importmap (Three.js r170)
+- `css/style.css` — Chamfered HUD panels, responsive mobile/desktop layout, Cyber Yellow / Cyan / Crimson palette
+- `js/app.js` — UI orchestration, morph controls, keyboard shortcuts, dossier drawer
+- `js/data/landmarks.js` — Landmark coordinates, camera presets, real architectural dossiers, 2077 lore, atmosphere presets
+- `js/engine/world.js` — Core Three.js renderer, EffectComposer + UnrealBloomPass, camera modes (`ORBIT` / `AUTO-TOUR` / `DRONE`)
+- `js/engine/landmarks3d.js` — Procedural 3D architectural builders for all Astana landmarks, Nurzhol Boulevard, Esil River & monorail
+- `js/engine/citySystems.js` — InstancedMesh megacity skyline filler, animated holographic billboards, aerial AV traffic, searchlights, GPU neon rain
+- `js/engine/shaders.js` — Custom GLSL shaders
+- `js/engine/textures.js` — High-res procedural Canvas2D bilingual Kazakh/Cyrillic/Katakana cyberpunk billboard textures & PMREM env map
+- `js/engine/audio.js` — Optional procedural Web Audio synth drone + rain generator

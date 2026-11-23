@@ -1,459 +1,294 @@
 /**
- * Astana 3D Showcase - Main Application Logic
- * Interactive Catalog, Architectural Dossiers, Audio Engine
+ * Astana -> Night City 2077
+ * Main UI Controller & Diegetic HUD Orchestration
  */
-import AstanaViewer3D from './viewer3d.js';
+import { LANDMARKS, ATMOSPHERE_PRESETS } from './data/landmarks.js';
+import { AstanaNightCityEngine } from './engine/world.js';
+import { CyberAudioEngine } from './engine/audio.js';
 
-const ARCHITECTURAL_DATA = {
-  canyon: {
-    id: 'canyon',
-    title: 'Нео-Астана 2077: Кинематографический Каньон (Galazi Style)',
-    titleKz: '«Нео-Астана 2077» каньоны & Бәйтерек',
-    height: '105 м (Байтерек) / 45 м (фасады)',
-    year: '2077 год (Концепт-арт)',
-    architects: 'Galazi Art / AI Cinema Studio',
-    structuralType: 'Высокодетализированный модульный 3D-китбаш (1,618 объектов)',
-    weight: '1,618 отдельных 3D мешей',
-    videoViewport: './assets/media/astana_galazi_reel.mp4',
-    videoDepth: './assets/media/galazi_viewport_random.mp4',
-    thumb: './assets/media/astana_galazi_poster.jpg',
-    snippet: 'Ультрадетализированный городской каньон будущего с 8-этажными фасадами, пожарными лестницами, вентшахтами, 22 кабелями, кибер-машинами и монументом Байтерек в перспективе.',
-    description: `«Нео-Астана 2077» — масштабный кинематографический 3D-проект, созданный по стандартам вирусных видео Galazi (@galaziart). Сцена представляет собой плотный уличный каньон футуристической Астаны, выстроенный из 1 618 отдельных процедурных элементов.
-
-В перспективе улицы величественно возвышается монумент «Астана-Байтерек» с золотой сферой Самрук. По обе стороны улицы расположены 8-этажные модульные здания с утопленными окнами, балконами, пожарными лестницами, системами кондиционирования, вращающимимися промышленными вентиляторами и крышными чиллерами.
-
-Между фасадами натянуты 22 провисающих кабеля, на стенах установлены вертикальные неоновые клинки с надписями на казахском языке («БӘЙТЕРЕК», «САМРҰҚ», «АСТАНА», «ЭКСПО»), а на мокром асфальте с разметкой припаркованы футуристические автомобили и пешеходный переход.
-
-Проект демонстрирует революционный пайплайн: переход от плотного 3D-вьюпорта Blender Workbench с пастельной цветовой раскраской Random Color и тенями Cavity к фотореалистичному ночному кинематографическому кадру с объемным туманом и неоновыми отражениями.`,
-    specs: [
-      { label: 'Количество деталей', val: '1 618 мешей' },
-      { label: 'Объем геометрии', val: '280 000+ полигонов' },
-      { label: 'Кабели и коммуникации', val: '22 провисающих провода' },
-      { label: 'Неоновые вывески', val: 'Бәйтерек, Самрұқ, Астана, Экспо' },
-      { label: 'Длина каньона', val: '140 метров' },
-      { label: 'Архитектурный стиль', val: 'Cyber-Steppe Modular Kitbash' },
-      { label: 'Рендер-движок', val: 'Blender 5.3 Workbench + EEVEE' },
-      { label: 'Видео-мастер', val: '1080×1920 24fps Cinema' }
-    ],
-    facts: [
-      'Модель объединяет более 1 600 независимых объектов: вентиляторы, решетки, пожарные лестницы, ступени, неоновые панели и кибер-кары.',
-      'В режиме «Random Pastel» каждый из 1 618 объектов окрашивается в свой пастельный тон по формуле золотого сечения HSL, воссоздавая культовый стиль Blender Workbench от Galazi.',
-      'Сцена оптимизирована для плавного рендеринга в реальном времени WebGL Three.js прямо в браузере при частоте 60 кадров/с.',
-      'В кинематографическом видео используется оригинальный саунд-дизайн с 52Hz суб-басом и атмосферным степным ветром.'
-    ]
-  },
-  baiterek: {
-    id: 'baiterek',
-    title: 'Монумент «Астана-Байтерек»',
-    titleKz: '«Бәйтерек» монументі',
-    height: '105 м',
-    year: '2002 год',
-    architects: 'Акмурза Рустембеков, сэр Норман Фостер',
-    structuralType: 'Стальная решетчатая башня со сферой',
-    weight: 'Свыше 1 000 тонн',
-    videoViewport: './assets/media/shot1_baiterek_viewport.mp4',
-    videoDepth: './assets/media/shot1_baiterek_depth.mp4',
-    thumb: './assets/media/thumb_baiterek.jpg',
-    snippet: 'Главный символ независимого Казахстана и столицы, олицетворяющий Древо Жизни из древней тюркской мифологии с золотым яйцом священной птицы Самрук в кроне.',
-    description: `«Байтерек» — уникальный архитектурный символ столицы Казахстана, воздвигнутый в 2002 году по инициативе первого президента. Высота сооружения составляет 105 метров, а уровень 97 метров символизирует 1997 год — дату официального переноса столицы в Астану.
-
-Архитектурная концепция монумента глубоко укоренена в тюркской космогонии: Байтерек представляет собой священное Древо Жизни («Бәйтерек»), растущее на берегу Мировой реки. Корни древа удерживают подземный мир, ствол находится в земном измерении, а в пышную крону прилетает священная птица Самрук, чтобы отложить золотое яйцо — Солнце.
-
-Ствол башни образован 18 мощными металлическими стрелами-опорами белого цвета, которые на вершине изгибаются и бережно удерживают гигантскую золотую сферу диаметром 22 метра и весом около 300 тонн. Шар выполнен из инновационного многослойного стекла «хамелеон», меняющего оттенок в зависимости от угла падения солнечных лучей. Внутри шара расположена панорамная смотровая площадка с круговым обзором столицы и художественная композиция «Аялы-Алақан» с оттиском ладони.`,
-    specs: [
-      { label: 'Высота башни', val: '105 метров' },
-      { label: 'Уровень смотровой', val: '97 метров' },
-      { label: 'Диаметр шара', val: '22 метра' },
-      { label: 'Вес сферы', val: '300 тонн' },
-      { label: 'Количество опор', val: '18 стальных ветвей' },
-      { label: 'Стекло сферы', val: 'Хамелеон (Solarglas)' },
-      { label: 'Лифты', val: '2 скоростных панорамных' },
-      { label: '3D Mesh', val: 'Blender 5.3 Cycles' }
-    ],
-    facts: [
-      'Шар монумента диаметром 22 метра поднимали на высоту 97 метров по уникальной инженерной технологии с помощью специальных домкратов в разобранном виде.',
-      'В панорамном зале установлена композиция «Бата» — деревянный глобус с автографами представителей 17 мировых конфессий.',
-      'Монумент способен выдерживать шквальные степные ветра до 40 м/с и сейсмические колебания до 7 баллов.',
-      'Отпечаток ладони «Аялы-Алақан» выполнен из сплава золота и серебра — традиция гласит, что прикосновение к нему приносит удачу.'
-    ]
-  },
-
-  khanshatyr: {
-    id: 'khanshatyr',
-    title: 'ТРЦ «Хан Шатыр»',
-    titleKz: '«Хан Шатыр» сауда-ойын-сауық орталығы',
-    height: '150 м (со шпилем)',
-    year: '2010 год',
-    architects: 'Сэр Норман Фостер (Foster + Partners)',
-    structuralType: 'Вантовая коническая шатровая конструкция',
-    weight: '1 200 тонн металлоконструкций',
-    videoViewport: './assets/media/shot2_khanshatyr_viewport.mp4',
-    videoDepth: './assets/media/shot2_khanshatyr_depth.mp4',
-    thumb: './assets/media/thumb_khanshatyr.jpg',
-    snippet: 'Крупнейшее в мире шатровое сооружение в форме асимметричного косого конуса, выполненное из светопрозрачного полимера ETFE с внутренним круглогодичным тропическим курортом.',
-    description: `«Хан Шатыр» (в переводе «Шатер Хана») — колоссальный торгово-развлекательный центр, торжественно открытый 5 июля 2010 года. Здание включено в Книгу рекордов Гиннесса как самое большое шатровое сооружение на планете. Его общая площадь превышает 127 000 квадратных метров, а высота шпиля достигает 150 метров.
-
-Проект разработан выдающимся британским архитектором Норманом Фостером. Форма сооружения переосмысливает традиционную казахскую юрту в эстетике современной био-хай-тек архитектуры. Центральная треногая опора весом 2 000 тонн наклонена на 15 градусов и удерживает гигантскую сеть натянутых стальных вантовых тросов.
-
-Оболочка шатра состоит из трехслойного инновационного полимера ETFE (этилентетрафторэтилена), обладающего уникальными теплоизоляционными свойствами. Благодаря этому внутри комплекса круглый год поддерживается комфортная температура +24°C, даже когда снаружи свирепствуют сибирские бураны с температурой -40°C. На верхнем ярусе расположен знаменитый крытый аквапарк Sky Beach Club с искусственным океанским прибоем и белоснежным песком, доставленным прямиком с Мальдивских островов.`,
-    specs: [
-      { label: 'Высота шатра', val: '150 метров' },
-      { label: 'Площадь основания', val: '127 000 м²' },
-      { label: 'Опорный пилон', val: 'Тренога (наклон 15°)' },
-      { label: 'Материал купола', val: '3-слойный ETFE' },
-      { label: 'Внутренний климат', val: '+24°C круглый год' },
-      { label: 'Аквапарк', val: 'Sky Beach Club' },
-      { label: 'Песок пляжа', val: 'Природный мальдивский' },
-      { label: '3D Mesh', val: 'Вантовая сетка Blender' }
-    ],
-    facts: [
-      'Здание вошло в список лучших эко-построек мира по версии журнала Forbes Style.',
-      'Материал ETFE пропускает до 95% ультрафиолета, благодаря чему пальмы и растения внутри шатра растут под естественным солнечным светом.',
-      'Песок для пляжного клуба Sky Beach Club нагревается скрытой системой теплого пола и не обжигает ступни.',
-      'Конструкция шатра разработана турецкой компанией Sembol Construction и выдерживает колоссальные снеговые нагрузки степной зимы.'
-    ]
-  },
-
-  nuralem: {
-    id: 'nuralem',
-    title: 'Сфера «Нур Алем» & Abu Dhabi Plaza',
-    titleKz: '«Нұр Әлем» сферасы және Әбу-Даби Плаза',
-    height: '100 м (сфера) / 311 м (небоскреб)',
-    year: '2017 / 2021 гг.',
-    architects: 'Albert Speer Jr., Adrian Smith + Gordon Gill',
-    structuralType: 'Полная геодезическая сфера + Мега-небоскреб',
-    weight: '13 000 тонн стали и стекла',
-    videoViewport: './assets/media/shot3_nuralem_viewport.mp4',
-    videoDepth: './assets/media/shot3_nuralem_depth.mp4',
-    thumb: './assets/media/thumb_nuralem.jpg',
-    snippet: 'Самое большое в мире сферическое здание диаметром 80 метров — Музей энергии будущего EXPO-2017 с встроенными бесшумными ветрогенераторами, на фоне высочайшего небоскреба Центральной Азии (311 м).',
-    description: `Архитектурный ансамбль района EXPO и делового центра столицы объединяет два грандиозных инженерных шедевра XXI века: Музей «Нур Алем» (Сияющий Мир) и многофункциональный комплекс «Abu Dhabi Plaza».
-
-«Нур Алем» — это единственное в мире здание, выполненное в форме идеальной сферы диаметром 80 метров. Оно было центральным павильоном Международной специализированной выставки EXPO-2017 «Энергия будущего». Оболочка сферы смонтирована из 2 824 гнутых панелей двоякой кривизны из немецкого многослойного стекла. В верхушку сферы интегрированы два бесшумных ветрогенератора, вырабатывающих электроэнергию для нужд музея. Внутри разместились 8 тематических этажей, посвященных энергии космоса, солнца, ветра, воды и биомассы.
-
-На заднем плане возвышается грандиозная башня «Abu Dhabi Plaza» — самый высокий небоскреб в Казахстане и всей Центральной Азии высотой 311 метров (75 этажей). Спроектированный мировыми лидерами высотного строительства, небоскреб воплощает динамику и экономическую мощь современной Евразии.`,
-    specs: [
-      { label: 'Диаметр сферы', val: '80 метров' },
-      { label: 'Высота сферы', val: '100 метров' },
-      { label: 'Панели остекления', val: '2 824 стекла 3D-формы' },
-      { label: 'Ветрогенераторы', val: '2 безвибрационных ротора' },
-      { label: 'Высота Abu Dhabi', val: '311 метров' },
-      { label: 'Этажность башни', val: '75 этажей' },
-      { label: 'Концепция', val: 'Zero-Emission Eco-Future' },
-      { label: '3D Mesh', val: 'Геодезическая сеть + MoE' }
-    ],
-    facts: [
-      'Каждое из 2 824 стекол сферы «Нур Алем» имеет уникальную пространственную форму и геометрию.',
-      'На верхнем 8-м этаже сферы оборудован стеклянный мост со смотровой площадкой прямо над пропастью атриума.',
-      'Abu Dhabi Plaza виден с расстояния более 35 километров на подъезде к Астане по карагандинской трассе.',
-      'Фасад сферы работает как гигантский медиа-экран площадью более 20 000 м², проецирующий световые шоу в ночное небо.'
-    ]
-  }
-};
-
-class AstanaApp {
+class AstanaNightCityApp {
   constructor() {
-    this.viewer = null;
-    this.audioCtx = null;
-    this.isAudioPlaying = false;
-    this.soundNodes = null;
+    this.activeLandmarkId = 'overview';
+    this.activePresetKey = 'neon_rain';
+    this.hudHidden = false;
+    this.audio = new CyberAudioEngine();
 
-    this.initViewer();
-    this.bindUI();
-    this.bindModal();
-    this.bindAudio();
+    this.cacheDom();
+    this.buildLandmarkDock();
+    this.renderDossier('overview');
+    this.initEngine();
+    this.bindEvents();
   }
 
-  initViewer() {
-    try {
-      this.viewer = new AstanaViewer3D('webgl-canvas', 'viewport-loader', 'viewport-hud');
-      // Load default model
-      this.viewer.loadModel('baiterek');
-    } catch (e) {
-      console.warn('WebGL init note:', e);
-    }
+  cacheDom() {
+    this.canvas = document.getElementById('scene-canvas');
+    this.bootOverlay = document.getElementById('boot-overlay');
+    this.shiftFlash = document.getElementById('shift-flash');
+
+    this.slider = document.getElementById('cyber-slider');
+    this.sliderFill = document.getElementById('slider-fill');
+    this.btnShiftToggle = document.getElementById('btn-shift-toggle');
+    this.btnShiftText = document.getElementById('btn-shift-text');
+
+    this.hudCyberPct = document.getElementById('hud-cyber-pct');
+    this.statusModeLabel = document.getElementById('status-mode-label');
+    this.teleCoords = document.getElementById('tele-coords');
+    this.teleAlt = document.getElementById('tele-alt');
+    this.teleFps = document.getElementById('tele-fps');
+
+    this.landmarkDock = document.getElementById('landmark-dock');
+    this.dossierDrawer = document.getElementById('dossier-drawer');
+    this.btnDossier = document.getElementById('btn-dossier');
+    this.btnCloseDossier = document.getElementById('btn-close-dossier');
+    this.btnAudio = document.getElementById('btn-audio');
+    this.btnHideHud = document.getElementById('btn-hide-hud');
+    this.btnRestoreHud = document.getElementById('btn-restore-hud');
+    this.btnFullscreen = document.getElementById('btn-fullscreen');
+    this.droneToast = document.getElementById('drone-toast');
+
+    this.dossierCode = document.getElementById('dossier-code');
+    this.dossierTitle = document.getElementById('dossier-title');
+    this.dossierKz = document.getElementById('dossier-kz');
+    this.dossierStats = document.getElementById('dossier-stats');
+    this.dossierRealDesc = document.getElementById('dossier-real-desc');
+    this.dossierCyberLore = document.getElementById('dossier-cyber-lore');
   }
 
-  bindUI() {
-    // Model Selector Tabs
-    const tabBtns = document.querySelectorAll('.model-tab-btn');
-    tabBtns.forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        tabBtns.forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        const modelKey = btn.dataset.model;
-        if (this.viewer) {
-          this.viewer.loadModel(modelKey);
-        }
-      });
+  buildLandmarkDock() {
+    this.landmarkDock.innerHTML = LANDMARKS.map(
+      (lm, idx) => `
+      <button
+        type="button"
+        class="landmark-btn${idx === 0 ? ' active' : ''}"
+        data-landmark="${lm.id}"
+        title="Перелететь к: ${lm.title} [${idx + 1}]"
+      >
+        <span class="lm-code">${String(idx).padStart(2, '0')}</span>
+        <span>${lm.label}</span>
+      </button>
+    `
+    ).join('');
+  }
+
+  initEngine() {
+    this.engine = new AstanaNightCityEngine(this.canvas, {
+      onCyberChange: (level) => this.syncCyberUI(level),
+      onStats: (stats) => this.updateTelemetry(stats),
+      onReady: () => {
+        // Reveal the live Astana -> Night City transformation smoothly
+        requestAnimationFrame(() => {
+          this.bootOverlay.classList.add('hidden');
+        });
+      }
     });
 
-    // Shading Mode Buttons
-    const shadeBtns = document.querySelectorAll('.shading-btn');
-    shadeBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        shadeBtns.forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        const mode = btn.dataset.shading;
-        if (this.viewer) {
-          this.viewer.applyShadingMode(mode);
-        }
-      });
-    });
-
-    // Reset View Button
-    const btnReset = document.getElementById('btn-reset-view');
-    if (btnReset) {
-      btnReset.addEventListener('click', () => {
-        if (this.viewer) this.viewer.resetView();
-      });
-    }
-
-    // Auto Rotate Button
-    const btnRotate = document.getElementById('btn-auto-rotate');
-    if (btnRotate) {
-      btnRotate.addEventListener('click', () => {
-        if (this.viewer) {
-          const isRotating = this.viewer.toggleAutoRotate();
-          btnRotate.classList.toggle('active', isRotating);
-        }
-      });
-    }
-
-    // Fullscreen Button
-    const btnFs = document.getElementById('btn-fullscreen');
-    if (btnFs) {
-      btnFs.addEventListener('click', () => {
-        const wrap = document.querySelector('.viewport-wrapper');
-        if (!document.fullscreenElement) {
-          wrap.requestFullscreen().catch((err) => console.log(err));
-        } else {
-          document.exitFullscreen();
-        }
-      });
-    }
-
-    // Catalog Card Clicks
-    const cards = document.querySelectorAll('.model-card');
-    cards.forEach((card) => {
-      card.addEventListener('click', (e) => {
-        const id = card.dataset.modelId;
-        // If clicked on "3D Осмотр", load in 3D canvas and scroll up
-        if (e.target.closest('.btn-inspect-3d')) {
-          e.stopPropagation();
-          if (this.viewer) {
-            this.viewer.loadModel(id);
-            // activate corresponding tab
-            tabBtns.forEach((b) => b.classList.toggle('active', b.dataset.model === id));
-            document.querySelector('.hero-stage').scrollIntoView({ behavior: 'smooth' });
-          }
-          return;
-        }
-        // Otherwise open full architectural description modal
-        this.openDossier(id);
-      });
-    });
+    // Expose globally for inspection/debugging
+    window.astanaEngine = this.engine;
+    window.astanaApp = this;
   }
 
-  bindModal() {
-    this.modalOverlay = document.getElementById('detail-modal');
-    this.btnCloseModal = document.getElementById('btn-close-modal');
-    this.modalVideo = document.getElementById('modal-video-player');
-
-    if (this.btnCloseModal) {
-      this.btnCloseModal.addEventListener('click', () => this.closeDossier());
-    }
-
-    if (this.modalOverlay) {
-      this.modalOverlay.addEventListener('click', (e) => {
-        if (e.target === this.modalOverlay) {
-          this.closeDossier();
-        }
-      });
-    }
-
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') this.closeDossier();
-    });
-
-    // Modal Video Tabs (Viewport vs Depth)
-    const mediaTabs = document.querySelectorAll('.tab-media-btn');
-    mediaTabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        mediaTabs.forEach((t) => t.classList.remove('active'));
-        tab.classList.add('active');
-        const mediaType = tab.dataset.media;
-        const currentData = ARCHITECTURAL_DATA[this.activeModalKey];
-        if (currentData && this.modalVideo) {
-          if (mediaType === 'viewport') {
-            this.modalVideo.src = currentData.videoViewport;
-          } else if (mediaType === 'depth') {
-            this.modalVideo.src = currentData.videoDepth;
-          }
-          this.modalVideo.play().catch(() => {});
-        }
-      });
-    });
-  }
-
-  openDossier(key) {
-    const data = ARCHITECTURAL_DATA[key];
-    if (!data) return;
-    this.activeModalKey = key;
-
-    // Fill titles
-    document.getElementById('modal-title').textContent = data.title;
-    document.getElementById('modal-kz-title').textContent = data.titleKz;
-
-    // Fill Stats
-    const statsContainer = document.getElementById('modal-dossier-stats');
-    if (statsContainer) {
-      statsContainer.innerHTML = `
-        <div class="dossier-stat"><span>Высота</span><strong>${data.height}</strong></div>
-        <div class="dossier-stat"><span>Год ввода</span><strong>${data.year}</strong></div>
-        <div class="dossier-stat"><span>Архитектор</span><strong>${data.architects}</strong></div>
-        <div class="dossier-stat"><span>Вес / Масса</span><strong>${data.weight}</strong></div>
-      `;
-    }
-
-    // Fill Description
-    const descEl = document.getElementById('modal-desc-text');
-    if (descEl) {
-      descEl.innerHTML = data.description
-        .split('\n\n')
-        .map((p) => `<p>${p}</p>`)
-        .join('');
-    }
-
-    // Fill Specs table
-    const specsEl = document.getElementById('modal-specs-list');
-    if (specsEl) {
-      specsEl.innerHTML = data.specs
-        .map(
-          (s) => `
-        <div class="spec-row" style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.06); font-size:0.88rem;">
-          <span style="color:var(--text-muted); font-family:var(--font-mono);">${s.label}:</span>
-          <strong style="color:var(--text-primary); font-weight:600;">${s.val}</strong>
-        </div>
-      `
-        )
-        .join('');
-    }
-
-    // Fill Facts
-    const factsEl = document.getElementById('modal-facts-list');
-    if (factsEl) {
-      factsEl.innerHTML = data.facts.map((f) => `<li>${f}</li>`).join('');
-    }
-
-    // Reset video tab & source
-    const mediaTabs = document.querySelectorAll('.tab-media-btn');
-    mediaTabs.forEach((t) => t.classList.remove('active'));
-    if (mediaTabs[0]) mediaTabs[0].classList.add('active');
-
-    if (this.modalVideo) {
-      this.modalVideo.src = data.videoViewport;
-      this.modalVideo.play().catch(() => {});
-    }
-
-    this.modalOverlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  closeDossier() {
-    if (!this.modalOverlay) return;
-    this.modalOverlay.classList.remove('open');
-    document.body.style.overflow = '';
-    if (this.modalVideo) {
-      this.modalVideo.pause();
-    }
-  }
-
-  bindAudio() {
-    const audioBtn = document.getElementById('btn-audio-toggle');
-    if (!audioBtn) return;
-
-    audioBtn.addEventListener('click', () => {
-      if (!this.isAudioPlaying) {
-        this.startFuturisticSoundscape();
-        audioBtn.classList.add('active');
-        audioBtn.title = 'Выключить звук атмосферы';
+  bindEvents() {
+    // Live Astana <-> Night City Morph Slider
+    this.slider.addEventListener('input', (e) => {
+      const val = Number(e.target.value) / 100;
+      this.engine.setCyberLevel(val, true);
+      if (val < 0.08) {
+        this.highlightPresetButton('astana_dusk');
       } else {
-        this.stopFuturisticSoundscape();
-        audioBtn.classList.remove('active');
-        audioBtn.title = 'Включить атмосферный звук';
+        this.highlightPresetButton(this.engine.activeCyberPreset.id);
+      }
+    });
+
+    // Dramatic One-Click Astana <-> Night City 2077 Shift CTA
+    this.btnShiftToggle.addEventListener('click', () => {
+      const toCyber = this.engine.cyberLevel < 0.5;
+      this.triggerShiftFlash();
+      this.audio.playShiftPulse(toCyber);
+
+      if (toCyber) {
+        const targetPreset = this.activePresetKey === 'astana_dusk' ? 'neon_rain' : this.activePresetKey;
+        this.engine.setAtmospherePreset(targetPreset);
+        this.highlightPresetButton(targetPreset);
+      } else {
+        this.engine.setAtmospherePreset('astana_dusk');
+        this.highlightPresetButton('astana_dusk');
+      }
+    });
+
+    // Landmark Quick-Jump Buttons
+    this.landmarkDock.addEventListener('click', (e) => {
+      const btn = e.target.closest('.landmark-btn');
+      if (!btn) return;
+      this.selectLandmark(btn.dataset.landmark);
+    });
+
+    // Atmosphere Preset Buttons
+    document.querySelectorAll('[data-preset]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.preset;
+        this.activePresetKey = key;
+        this.triggerShiftFlash();
+        this.audio.playShiftPulse(key !== 'astana_dusk');
+        this.engine.setAtmospherePreset(key);
+        this.highlightPresetButton(key);
+      });
+    });
+
+    // Camera Mode Buttons
+    document.querySelectorAll('[data-cam]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const mode = btn.dataset.cam;
+        this.setCameraMode(mode);
+      });
+    });
+
+    // Dossier Drawer Toggle
+    this.btnDossier.addEventListener('click', () => this.toggleDossier());
+    this.btnCloseDossier.addEventListener('click', () => this.toggleDossier(false));
+
+    // Audio Toggle (Muted by default)
+    this.btnAudio.addEventListener('click', () => {
+      const playing = this.audio.toggle();
+      this.btnAudio.classList.toggle('active', playing);
+    });
+
+    // Hide / Restore HUD
+    this.btnHideHud.addEventListener('click', () => this.setHudHidden(true));
+    this.btnRestoreHud.addEventListener('click', () => this.setHudHidden(false));
+
+    // Fullscreen
+    this.btnFullscreen.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    });
+
+    // Keyboard shortcuts: H = Hide HUD, I = Dossier, 1..8 = Landmarks, X = Shift Astana <-> 2077
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.code === 'KeyH') {
+        this.setHudHidden(!this.hudHidden);
+      } else if (e.code === 'KeyI') {
+        this.toggleDossier();
+      } else if (e.code === 'KeyX') {
+        this.btnShiftToggle.click();
+      } else if (e.key >= '1' && e.key <= '8') {
+        const idx = Number(e.key) - 1;
+        if (LANDMARKS[idx]) this.selectLandmark(LANDMARKS[idx].id);
+      } else if (e.code === 'Escape') {
+        this.toggleDossier(false);
+        if (this.hudHidden) this.setHudHidden(false);
       }
     });
   }
 
-  startFuturisticSoundscape() {
-    try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      this.audioCtx = new AudioContext();
+  selectLandmark(id) {
+    const lm = LANDMARKS.find((l) => l.id === id);
+    if (!lm) return;
+    this.activeLandmarkId = id;
 
-      // Atmospheric Steppe Wind & Low Drone Synth Generator
-      const masterGain = this.audioCtx.createGain();
-      masterGain.gain.setValueAtTime(0.01, this.audioCtx.currentTime);
-      masterGain.gain.exponentialRampToValueAtTime(0.2, this.audioCtx.currentTime + 2.0);
-      masterGain.connect(this.audioCtx.destination);
+    this.landmarkDock.querySelectorAll('.landmark-btn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.landmark === id);
+    });
 
-      // Low Drone
-      const osc1 = this.audioCtx.createOscillator();
-      osc1.type = 'sawtooth';
-      osc1.frequency.setValueAtTime(55, this.audioCtx.currentTime); // A1 note
+    this.teleCoords.textContent = lm.coords;
+    this.renderDossier(id);
+    this.engine.flyToLandmark(id);
 
-      const filter1 = this.audioCtx.createBiquadFilter();
-      filter1.type = 'lowpass';
-      filter1.frequency.setValueAtTime(140, this.audioCtx.currentTime);
-
-      osc1.connect(filter1);
-      filter1.connect(masterGain);
-      osc1.start();
-
-      // Soft High Ethereal Resonance (Baiterek golden aura)
-      const osc2 = this.audioCtx.createOscillator();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(220, this.audioCtx.currentTime);
-
-      const filter2 = this.audioCtx.createBiquadFilter();
-      filter2.type = 'bandpass';
-      filter2.frequency.setValueAtTime(440, this.audioCtx.currentTime);
-      filter2.Q.value = 5;
-
-      const gain2 = this.audioCtx.createGain();
-      gain2.gain.setValueAtTime(0.05, this.audioCtx.currentTime);
-
-      osc2.connect(filter2);
-      filter2.connect(gain2);
-      gain2.connect(masterGain);
-      osc2.start();
-
-      this.soundNodes = { masterGain, osc1, osc2 };
-      this.isAudioPlaying = true;
-    } catch (err) {
-      console.warn('Web Audio not supported or blocked:', err);
+    // Sync camera button state if tour exited into orbit
+    if (this.engine.cameraMode === 'orbit') {
+      document.querySelectorAll('[data-cam]').forEach((b) => {
+        b.classList.toggle('active', b.dataset.cam === 'orbit');
+      });
     }
   }
 
-  stopFuturisticSoundscape() {
-    if (this.soundNodes && this.audioCtx) {
-      this.soundNodes.masterGain.gain.exponentialRampToValueAtTime(
-        0.001,
-        this.audioCtx.currentTime + 0.8
-      );
-      setTimeout(() => {
-        try {
-          this.soundNodes.osc1.stop();
-          this.soundNodes.osc2.stop();
-          this.audioCtx.close();
-        } catch (e) {}
-        this.isAudioPlaying = false;
-      }, 900);
+  renderDossier(id) {
+    const lm = LANDMARKS.find((l) => l.id === id);
+    if (!lm) return;
+    this.dossierCode.textContent = `${lm.code} // ${lm.sector}`;
+    this.dossierTitle.textContent = lm.title;
+    this.dossierKz.textContent = lm.titleKz;
+    this.dossierRealDesc.textContent = lm.realDesc;
+    this.dossierCyberLore.textContent = lm.cyberLore;
+
+    this.dossierStats.innerHTML = lm.realStats
+      .map(
+        (s) => `
+      <div class="dossier-stat-card">
+        <span>${s.label}</span>
+        <strong>${s.value}</strong>
+      </div>
+    `
+      )
+      .join('');
+  }
+
+  toggleDossier(forceState) {
+    const next = typeof forceState === 'boolean' ? forceState : !this.dossierDrawer.classList.contains('open');
+    this.dossierDrawer.classList.toggle('open', next);
+    this.btnDossier.classList.toggle('active', next);
+  }
+
+  setCameraMode(mode) {
+    this.engine.setCameraMode(mode);
+    document.querySelectorAll('[data-cam]').forEach((b) => {
+      b.classList.toggle('active', b.dataset.cam === mode);
+    });
+    this.droneToast.classList.toggle('visible', mode === 'drone');
+  }
+
+  setHudHidden(hidden) {
+    this.hudHidden = hidden;
+    document.body.classList.toggle('hud-hidden', hidden);
+  }
+
+  highlightPresetButton(key) {
+    document.querySelectorAll('[data-preset]').forEach((b) => {
+      b.classList.toggle('active', b.dataset.preset === key);
+    });
+  }
+
+  triggerShiftFlash() {
+    this.shiftFlash.classList.remove('pulse');
+    void this.shiftFlash.offsetWidth; // restart CSS keyframe cleanly
+    this.shiftFlash.classList.add('pulse');
+  }
+
+  syncCyberUI(level) {
+    const pct = Math.round(level * 100);
+    this.slider.value = String(pct);
+    this.sliderFill.style.width = `${pct}%`;
+    this.hudCyberPct.textContent = `${pct}%`;
+
+    const isCyber = level >= 0.5;
+    document.body.classList.toggle('mode-cyber', isCyber);
+    document.body.classList.toggle('mode-real', !isCyber);
+
+    if (level < 0.15) {
+      this.statusModeLabel.textContent = 'ASTANA REALITY · NURZHOL GOLDEN DUSK';
+      this.btnShiftText.textContent = 'INITIATE 2077 SHIFT';
+    } else if (level < 0.85) {
+      this.statusModeLabel.textContent = `SHIFTING REALITY -> NIGHT CITY // ${pct}%`;
+      this.btnShiftText.textContent = isCyber ? 'ВЕРНУТЬ АСТАНУ' : 'INITIATE 2077 SHIFT';
+    } else {
+      const p = ATMOSPHERE_PRESETS[this.engine.activeCyberPreset.id];
+      this.statusModeLabel.textContent = `NIGHT CITY OVERRIDE · ${p ? p.label : '2077'}`;
+      this.btnShiftText.textContent = 'АСТАНА 2026';
     }
+
+    const rainVal = this.engine ? this.engine.activeCyberPreset.rainIntensity : 1.0;
+    this.audio.syncMood(level, rainVal);
+  }
+
+  updateTelemetry(stats) {
+    this.teleFps.textContent = String(stats.fps);
+    this.teleAlt.textContent = `${stats.alt}M`;
   }
 }
 
-// Global hook
 document.addEventListener('DOMContentLoaded', () => {
-  window.astanaApp = new AstanaApp();
+  new AstanaNightCityApp();
 });
