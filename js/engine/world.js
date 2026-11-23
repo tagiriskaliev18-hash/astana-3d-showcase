@@ -2,7 +2,7 @@
  * Astana // Night City 2077 — Pass 4 Photorealistic PBR & Cyberpunk WebGL Engine
  * - Real 32-bit Shanghai Bund Urban HDRI Environment (RGBELoader + PMREMGenerator)
  * - Photorealistic Nocturnal Storm Sky Dome (nightcity_sky_pano.jpg)
- * - EffectComposer + RenderPass + UnrealBloomPass + CinemaGradeShaderPass + OutputPass
+ * - EffectComposer + RenderPass + N8AOPass + UnrealBloomPass + CinemaGradeShaderPass + OutputPass
  * - Single Permanent Nocturnal Rain-Slicked Atmosphere (Zero Mode Morphing)
  * - 3 Camera Modes: ORBIT, AUTO-TOUR, DRONE (WASD + Mouse Look)
  */
@@ -13,6 +13,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { N8AOPass } from '../../vendor/n8ao/N8AO.js';
 
 import { LANDMARKS, NOCTURNAL_ATMOSPHERE } from '../data/landmarks.js';
 import { createSkyMaterial, CinemaGradeShader } from './shaders.js';
@@ -129,21 +130,21 @@ export class AstanaNightCityEngine {
     this.scene.fog = new THREE.FogExp2(NOCTURNAL_ATMOSPHERE.fogColor, NOCTURNAL_ATMOSPHERE.fogDensity);
 
     this.scene.environment = this.pbr.envMap || this.fallbackEnvTexture;
-    this.scene.environmentIntensity = 0.96;
+    this.scene.environmentIntensity = 1.02;
 
-    this.camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.8, 1600);
+    this.camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.8, 2400);
 
     this.skyMat = createSkyMaterial(this.pbr.skyPano);
-    this.skyDome = new THREE.Mesh(new THREE.SphereGeometry(950, 40, 24), this.skyMat);
+    this.skyDome = new THREE.Mesh(new THREE.SphereGeometry(1350, 40, 24), this.skyMat);
     this.skyDome.frustumCulled = false;
     this.scene.add(this.skyDome);
   }
 
   initLights() {
-    this.hemiLight = new THREE.HemisphereLight(0x6d8eb2, 0x101622, 0.44);
+    this.hemiLight = new THREE.HemisphereLight(0x7496ba, 0x101622, 0.46);
     this.scene.add(this.hemiLight);
 
-    this.sunLight = new THREE.DirectionalLight(NOCTURNAL_ATMOSPHERE.sunColor, 0.70);
+    this.sunLight = new THREE.DirectionalLight(NOCTURNAL_ATMOSPHERE.sunColor, 0.80);
     this.sunLight.position.set(160, 210, 120);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.set(2048, 2048);
@@ -157,11 +158,11 @@ export class AstanaNightCityEngine {
     this.sunLight.shadow.bias = -0.0006;
     this.scene.add(this.sunLight);
 
-    this.rimLight = new THREE.DirectionalLight(NOCTURNAL_ATMOSPHERE.rimColor, 0.50);
+    this.rimLight = new THREE.DirectionalLight(NOCTURNAL_ATMOSPHERE.rimColor, 0.52);
     this.rimLight.position.set(-180, 95, -130);
     this.scene.add(this.rimLight);
 
-    this.amberFill = new THREE.DirectionalLight(0xd89b52, 0.36);
+    this.amberFill = new THREE.DirectionalLight(0xd89b52, 0.34);
     this.amberFill.position.set(150, 60, -120);
     this.scene.add(this.amberFill);
   }
@@ -215,9 +216,10 @@ export class AstanaNightCityEngine {
     this.searchlights = buildSearchlights();
     this.scene.add(this.searchlights.group);
 
-    // 8. GPU-Driven Nocturnal Rain Streaks
+    // 8. GPU-Driven Nocturnal Rain Drops & Subtle Atmospheric Mist
     this.rain = buildNeonRain();
     this.scene.add(this.rain.mesh);
+    if (this.rain.shaderMaterials) this.shaderFogMaterials.push(...this.rain.shaderMaterials);
 
     this.renderer.shadowMap.needsUpdate = true;
   }
@@ -225,17 +227,33 @@ export class AstanaNightCityEngine {
   initPostProcessing() {
     const w = window.innerWidth;
     const h = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.composer = new EffectComposer(this.renderer);
-    this.composer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.composer.setPixelRatio(dpr);
     this.composer.setSize(w, h);
 
     this.renderPass = new RenderPass(this.scene, this.camera);
+    // N8AOPass renders beauty + depth internally into its HalfFloat target; keeping RenderPass disabled avoids a redundant scene pass.
+    this.renderPass.enabled = false;
     this.composer.addPass(this.renderPass);
+
+    this.n8aoPass = new N8AOPass(this.scene, this.camera, Math.round(w * dpr), Math.round(h * dpr));
+    this.n8aoPass.configuration.aoRadius = 2.4;
+    this.n8aoPass.configuration.distanceFalloff = 0.9;
+    this.n8aoPass.configuration.intensity = 2.2;
+    this.n8aoPass.configuration.aoSamples = 16;
+    this.n8aoPass.configuration.denoiseSamples = 8;
+    this.n8aoPass.configuration.denoiseRadius = 8;
+    this.n8aoPass.configuration.biasOffset = 0.02;
+    this.n8aoPass.configuration.biasMultiplier = 0.5;
+    this.n8aoPass.configuration.halfRes = false;
+    this.n8aoPass.configuration.gammaCorrection = false;
+    this.composer.addPass(this.n8aoPass);
 
     this.bloomPass = new UnrealBloomPass(
       new THREE.Vector2(w, h),
       NOCTURNAL_ATMOSPHERE.bloomStrength,
-      0.42,
+      0.28,
       NOCTURNAL_ATMOSPHERE.bloomThreshold
     );
     this.composer.addPass(this.bloomPass);

@@ -106,9 +106,9 @@ export function createPBRSkyscraperMaterial(pbr, {
         varying vec3 vArchWorldPos;
         varying vec3 vArchWorldNormal;
         varying vec3 vArchLocalPos;
-        varying float vArchSeed;
-        varying float vArchAccent;
-        varying float vArchHeight;`
+        flat varying float vArchSeed;
+        flat varying float vArchAccent;
+        flat varying float vArchHeight;`
       )
       .replace(
         '#include <uv_vertex>',
@@ -140,9 +140,9 @@ export function createPBRSkyscraperMaterial(pbr, {
         varying vec3 vArchWorldPos;
         varying vec3 vArchWorldNormal;
         varying vec3 vArchLocalPos;
-        varying float vArchSeed;
-        varying float vArchAccent;
-        varying float vArchHeight;
+        flat varying float vArchSeed;
+        flat varying float vArchAccent;
+        flat varying float vArchHeight;
 
         float archHash21(vec2 p) {
           p = fract(p * vec2(123.34, 456.21));
@@ -276,7 +276,7 @@ export function createPBRSkyscraperMaterial(pbr, {
               float trofZ = step(0.22, hit.z) * step(hit.z, 1.32);
               float trof = trofX * trofZ;
               roomRadiant = isLit > 0.5
-                ? mix(lightCol * 0.34, lightCol * 1.65, trof)
+                ? mix(lightCol * 0.34, lightCol * 1.32, trof)
                 : vec3(0.012, 0.018, 0.028);
             } else {
               // Floor: dark polished office slab catching ceiling troffer bounce
@@ -321,7 +321,7 @@ export function createPBRSkyscraperMaterial(pbr, {
             vec3 ledCol = vArchAccent < 0.50
               ? vec3(0.04, 0.80, 0.98)
               : (vArchAccent < 0.80 ? vec3(0.98, 0.65, 0.16) : vec3(0.96, 0.14, 0.36));
-            _archEmis += ledCol * crownLine * hasLed * 1.15;
+            _archEmis += ledCol * crownLine * hasLed * 0.95;
           #endif
         }`
       )
@@ -356,7 +356,7 @@ export function createEsilRiverMaterial(skyPanoTex) {
       uSkyPano: { value: skyPanoTex },
       uTime: { value: 0 },
       uFogColor: { value: new THREE.Color(0x060a12) },
-      uFogDensity: { value: 0.00145 }
+      uFogDensity: { value: 0.00105 }
     },
     vertexShader: /* glsl */ `
       varying vec3 vWorldPos;
@@ -461,7 +461,7 @@ export function createWetRoadMaterial(pbr) {
       uSkyPano: { value: pbr.skyPano },
       uTime: { value: 0 },
       uFogColor: { value: new THREE.Color(0x060a12) },
-      uFogDensity: { value: 0.00145 }
+      uFogDensity: { value: 0.00105 }
     },
     vertexShader: /* glsl */ `
       varying vec3 vWorldPos;
@@ -564,7 +564,7 @@ export function createWetRoadMaterial(pbr) {
         asphaltCol = mix(asphaltCol, paintCol, nearCrosswalk * zebra * 0.68);
 
         // Concentric animated raindrop ripples strictly inside puddles
-        vec2 rGrad = (rainRippleLayer(wp, 0.75, 1.35) + rainRippleLayer(wp, 1.35, 1.65)) * 0.11;
+        vec2 rGrad = (rainRippleLayer(wp, 0.85, 1.35) + rainRippleLayer(wp, 1.70, 1.75) * 0.85) * 0.15;
         vec3 N = normalize(vec3(
           mix(texNorm.x * 0.62, rGrad.x, puddleMask),
           1.0,
@@ -584,19 +584,22 @@ export function createWetRoadMaterial(pbr) {
         float lampPools = pow(max(0.0, cos((wp.x + 7.0) * (3.14159 / 14.0))), 6.0) * streetLampLine;
         float baiterekGold = exp(-length(wp) * 0.025) * 0.75;
 
-        float shimmerC = pow(max(0.0, sin(wp.x * 0.21 + wp.y * 0.14 + rGrad.x * 6.0)), 6.0);
-        float shimmerM = pow(max(0.0, cos(wp.x * 0.17 - wp.y * 0.18 + rGrad.y * 6.0)), 8.0);
-        float shimmerA = pow(max(0.0, sin(wp.x * 0.13 + 1.4 - rGrad.x * 5.0)), 7.0);
+        float shimmerC = pow(max(0.0, sin(wp.x * 0.21 + wp.y * 0.14 + rGrad.x * 8.0)), 6.0);
+        float shimmerM = pow(max(0.0, cos(wp.x * 0.17 - wp.y * 0.18 + rGrad.y * 8.0)), 8.0);
+        float shimmerA = pow(max(0.0, sin(wp.x * 0.13 + 1.4 - rGrad.x * 7.0)), 7.0);
+        float rippleGlint = smoothstep(0.015, 0.085, length(rGrad)) * puddleMask * (0.35 + 0.65 * fresnel);
 
         vec3 signBounce =
           vec3(0.00, 0.90, 1.00) * (shimmerC * (0.45 + 0.65 * canyonMask)) +
           vec3(1.00, 0.12, 0.34) * (shimmerM * (0.35 + 0.72 * canyonMask)) +
           vec3(1.00, 0.62, 0.17) * (shimmerA * 0.45 + lampPools * 0.85 + baiterekGold);
+        vec3 rippleCatch = mix(vec3(0.42, 0.85, 1.0), vec3(1.0, 0.76, 0.42), streetLampLine) * rippleGlint * 0.68;
 
         float gloss = mix(0.14 * (1.0 - texRough * 0.6), 0.95, puddleMask);
         vec3 col = asphaltCol * 0.72
                  + skyEnv * gloss * (0.18 + 0.78 * fresnel)
-                 + signBounce * (0.06 + puddleMask * 0.82) * (0.26 + 0.74 * fresnel);
+                 + signBounce * (0.06 + puddleMask * 0.82) * (0.26 + 0.74 * fresnel)
+                 + rippleCatch;
 
         float dist = length(cameraPosition - vWorldPos);
         float fogFactor = 1.0 - exp(-pow(dist * uFogDensity, 2.0));
@@ -619,12 +622,13 @@ export function createWetRoadMaterial(pbr) {
 export function createCyberSignShaderMaterial(texture, {
   seed = 0,
   doubleSided = false,
-  intensity = 1.15,
-  opacity = 0.94
+  transparent = false,
+  intensity = 0.96,
+  opacity = 1.0
 } = {}) {
   return new THREE.ShaderMaterial({
-    transparent: true,
-    depthWrite: false,
+    transparent,
+    depthWrite: !transparent,
     side: doubleSided ? THREE.DoubleSide : THREE.FrontSide,
     blending: THREE.NormalBlending,
     uniforms: {
@@ -633,8 +637,9 @@ export function createCyberSignShaderMaterial(texture, {
       uSeed: { value: seed },
       uIntensity: { value: intensity },
       uOpacity: { value: opacity },
+      uTransparent: { value: transparent ? 1.0 : 0.0 },
       uFogColor: { value: new THREE.Color(0x060a12) },
-      uFogDensity: { value: 0.00145 }
+      uFogDensity: { value: 0.00105 }
     },
     vertexShader: /* glsl */ `
       varying vec2 vUv;
@@ -654,6 +659,7 @@ export function createCyberSignShaderMaterial(texture, {
       uniform float uSeed;
       uniform float uIntensity;
       uniform float uOpacity;
+      uniform float uTransparent;
       uniform vec3 uFogColor;
       uniform float uFogDensity;
       varying vec2 vUv;
@@ -663,38 +669,39 @@ export function createCyberSignShaderMaterial(texture, {
       void main() {
         vec2 uv = vUv;
 
-        // Subtle periodic horizontal glitch displacement
-        float glitchTrigger = step(0.955, sin(uTime * 1.9 + uSeed * 17.3) * 0.5 + 0.5);
-        float band = step(0.45, sin(uv.y * 26.0 + uTime * 14.0));
-        uv.x += glitchTrigger * band * 0.020 * sin(uTime * 47.0 + uSeed);
+        // Subtle micro-shimmer refresh (keeps architectural LED text razor-sharp)
+        float glitchTrigger = step(0.985, sin(uTime * 1.4 + uSeed * 17.3) * 0.5 + 0.5);
+        float band = step(0.65, sin(uv.y * 28.0 + uTime * 12.0));
+        uv.x += glitchTrigger * band * 0.0025 * sin(uTime * 37.0 + uSeed);
 
-        // Chromatic aberration RGB split
-        float ca = 0.0028 + glitchTrigger * 0.0065;
+        // Tight subpixel chromatic split
+        float ca = 0.0009 + glitchTrigger * 0.0016;
         float r = texture2D(uMap, clamp(uv + vec2(ca, 0.0), 0.002, 0.998)).r;
         float g = texture2D(uMap, clamp(uv, 0.002, 0.998)).g;
         float b = texture2D(uMap, clamp(uv - vec2(ca, 0.0), 0.002, 0.998)).b;
         vec3 col = vec3(r, g, b);
 
-        // CRT horizontal scanlines + subtle subpixel vertical mask + sweeping refresh line
-        float scanH = 0.86 + 0.14 * sin(uv.y * 260.0 - uTime * 8.5);
-        float scanV = 0.95 + 0.05 * sin(uv.x * 180.0);
-        float sweep = exp(-abs(fract(uTime * 0.24 + uSeed) - uv.y) * 34.0) * 0.28;
+        // Micro-LED pixel pitch scanlines + gentle refresh sweep
+        float scanH = 0.91 + 0.09 * sin(uv.y * 260.0 - uTime * 7.5);
+        float scanV = 0.96 + 0.04 * sin(uv.x * 180.0);
+        float sweep = exp(-abs(fract(uTime * 0.22 + uSeed) - uv.y) * 42.0) * 0.16;
         float lum = dot(col, vec3(0.299, 0.587, 0.114));
 
-        // Fresnel holographic edge rim glow
         vec3 V = normalize(cameraPosition - vWorldPos);
-        float fresnel = pow(1.0 - abs(dot(normalize(vWorldNormal), V)), 2.2);
-        vec3 finalCol = col * scanH * scanV * uIntensity * mix(0.62, 1.18, smoothstep(0.14, 0.72, lum))
-                      + col * (sweep + fresnel * 0.35);
+        float fresnel = pow(1.0 - abs(dot(normalize(vWorldNormal), V)), 2.5);
+        vec3 finalCol = col * scanH * scanV * uIntensity * mix(0.68, 1.08, smoothstep(0.14, 0.72, lum))
+                      + col * (sweep + fresnel * 0.20);
 
-        float edge = smoothstep(0.0, 0.018, uv.x) * smoothstep(1.0, 0.982, uv.x)
-                   * smoothstep(0.0, 0.018, uv.y) * smoothstep(1.0, 0.982, uv.y);
-        float flicker = 0.94 + 0.06 * sin(uTime * 18.0 + uSeed * 9.0);
-        float alpha = edge * flicker * uOpacity * mix(0.76, 0.98, smoothstep(0.10, 0.52, lum));
+        float edge = smoothstep(0.0, 0.015, uv.x) * smoothstep(1.0, 0.985, uv.x)
+                   * smoothstep(0.0, 0.015, uv.y) * smoothstep(1.0, 0.985, uv.y);
+        float flicker = 0.96 + 0.04 * sin(uTime * 14.0 + uSeed * 9.0);
+        float alpha = uTransparent > 0.5
+          ? edge * flicker * uOpacity * mix(0.76, 0.98, smoothstep(0.10, 0.52, lum))
+          : 1.0;
 
         float dist = length(cameraPosition - vWorldPos);
         float fogFactor = 1.0 - exp(-pow(dist * uFogDensity, 2.0));
-        finalCol = mix(finalCol, uFogColor, clamp(fogFactor * 0.85, 0.0, 0.92));
+        finalCol = mix(finalCol * mix(0.88 + 0.12 * edge, 1.0, uTransparent), uFogColor, clamp(fogFactor * 0.88, 0.0, 0.94));
 
         gl_FragColor = vec4(finalCol, alpha);
       }
@@ -717,7 +724,7 @@ export function createVolumetricSteamMaterial() {
     uniforms: {
       uTime: { value: 0 },
       uFogColor: { value: new THREE.Color(0x060a12) },
-      uFogDensity: { value: 0.00145 }
+      uFogDensity: { value: 0.00105 }
     },
     vertexShader: /* glsl */ `
       attribute vec3 aSteamData; // x = phase, y = speed, z = density
@@ -898,16 +905,16 @@ export function createSearchlightMaterial(colorHex) {
         float edgeSoft = pow(abs(dot(normalize(vNormalView), normalize(vViewDir))), 2.4);
         float verticalFade = smoothstep(0.0, 0.10, vUv.y) * pow(1.0 - vUv.y, 2.0);
         float shimmer = 0.90 + 0.10 * sin(uTime * 2.5 + vUv.y * 8.0);
-        float alpha = edgeSoft * verticalFade * shimmer * 0.09 * uBoost;
+        float alpha = edgeSoft * verticalFade * shimmer * 0.068 * uBoost;
         if (alpha < 0.002) discard;
-        gl_FragColor = vec4(uColor * 0.92, alpha);
+        gl_FragColor = vec4(uColor * 0.88, alpha);
       }
     `
   });
 }
 
 /* ============================================================================
-   9. GPU-DRIVEN ULTRA-FINE NOCTURNAL RAIN STREAKS SHADER
+   9. GPU-DRIVEN SOFT NOCTURNAL RAIN DROPS & ATMOSPHERIC MIST SHADERS
    ============================================================================ */
 export function createNeonRainMaterial() {
   return new THREE.ShaderMaterial({
@@ -916,30 +923,40 @@ export function createNeonRainMaterial() {
     blending: THREE.AdditiveBlending,
     uniforms: {
       uTime: { value: 0 },
-      uRainIntensity: { value: 0.85 },
-      uColorA: { value: new THREE.Color(0x6bd4ea) },
-      uColorB: { value: new THREE.Color(0xdba264) }
+      uRainIntensity: { value: 0.78 },
+      uColorA: { value: new THREE.Color(0x74b8d0) },
+      uColorB: { value: new THREE.Color(0xcba67d) }
     },
     vertexShader: /* glsl */ `
       attribute float aSpeed;
       attribute float aPhase;
       attribute float aTint;
       attribute float aOffsetY;
+      attribute float aAlong;
       uniform float uTime;
       varying float vTint;
       varying float vAlpha;
+      varying float vAlong;
 
       void main() {
         vec3 pos = position;
-        float ceiling = 175.0;
+        float ceiling = 170.0;
         float baseY = mod(pos.y - uTime * aSpeed + aPhase * ceiling, ceiling);
         float y = baseY + aOffsetY;
-        pos.x += (ceiling - baseY) * 0.042 - aOffsetY * 0.055;
+        pos.x += (ceiling - baseY) * 0.015 - aOffsetY * 0.025;
         pos.y = y;
 
+        vec4 wp = modelMatrix * vec4(pos, 1.0);
+        float camDist = length(cameraPosition - wp.xyz);
+        // Prevent near-lens scratch artifacts and softly fade into distant night mist
+        float nearFade = smoothstep(8.0, 26.0, camDist);
+        float farFade = exp(-pow(camDist * 0.0044, 2.0));
+        float vertFade = smoothstep(0.0, 12.0, baseY) * smoothstep(ceiling, ceiling - 24.0, baseY);
+
         vTint = aTint;
-        vAlpha = smoothstep(0.0, 14.0, baseY) * smoothstep(ceiling, ceiling - 25.0, baseY);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        vAlong = aAlong;
+        vAlpha = vertFade * nearFade * farFade;
+        gl_Position = projectionMatrix * viewMatrix * wp;
       }
     `,
     fragmentShader: /* glsl */ `
@@ -948,10 +965,83 @@ export function createNeonRainMaterial() {
       uniform vec3 uColorB;
       varying float vTint;
       varying float vAlpha;
+      varying float vAlong;
 
       void main() {
-        vec3 col = mix(uColorA, uColorB, vTint * 0.48);
-        gl_FragColor = vec4(col, vAlpha * 0.15 * min(uRainIntensity, 1.1));
+        float streakTaper = sin(clamp(vAlong, 0.0, 1.0) * 3.14159265);
+        vec3 col = mix(uColorA, uColorB, vTint * 0.40) * 0.72;
+        float alpha = vAlpha * streakTaper * 0.068 * min(uRainIntensity, 1.05);
+        if (alpha < 0.002) discard;
+        gl_FragColor = vec4(col, alpha);
+      }
+    `
+  });
+}
+
+export function createRainMistMaterial() {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.NormalBlending,
+    uniforms: {
+      uTime: { value: 0 },
+      uRainIntensity: { value: 0.78 },
+      uFogColor: { value: new THREE.Color(0x060a12) },
+      uFogDensity: { value: 0.00105 }
+    },
+    vertexShader: /* glsl */ `
+      attribute vec3 aMistData; // x = phase, y = speed, z = opacity
+      varying vec2 vUv;
+      varying vec3 vMistData;
+      varying vec3 vColor;
+      varying float vCamFade;
+
+      void main() {
+        vUv = uv;
+        vMistData = aMistData;
+        #ifdef USE_INSTANCING_COLOR
+          vColor = instanceColor;
+        #else
+          vColor = vec3(0.32, 0.56, 0.72);
+        #endif
+        vec4 wp = modelMatrix * instanceMatrix * vec4(position, 1.0);
+        float dist = length(cameraPosition - wp.xyz);
+        vCamFade = smoothstep(10.0, 28.0, dist) * exp(-pow(dist * 0.0032, 2.0));
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform float uRainIntensity;
+      varying vec2 vUv;
+      varying vec3 vMistData;
+      varying vec3 vColor;
+      varying float vCamFade;
+
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+      }
+
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        vec2 u = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+          mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+          u.y
+        );
+      }
+
+      void main() {
+        vec2 d = vUv - 0.5;
+        float radial = smoothstep(0.50, 0.12, length(d));
+        float n = noise(vUv * 3.2 + vec2(uTime * vMistData.y, vMistData.x)) * 0.65
+                + noise(vUv * 6.5 - vec2(uTime * vMistData.y * 0.6, vMistData.x * 1.7)) * 0.35;
+        float alpha = radial * smoothstep(0.22, 0.85, n) * vMistData.z * vCamFade * min(uRainIntensity, 1.0);
+        if (alpha < 0.002) discard;
+        gl_FragColor = vec4(vColor, alpha);
       }
     `
   });
@@ -985,29 +1075,203 @@ export const CinemaGradeShader = {
       vec2 centered = vUv - 0.5;
       float r2 = dot(centered, centered);
 
-      vec2 caOffset = centered * 0.0011 * smoothstep(0.04, 0.45, r2);
+      vec2 caOffset = centered * 0.00065 * smoothstep(0.06, 0.45, r2);
       float r = texture2D(tDiffuse, vUv + caOffset).r;
       float g = texture2D(tDiffuse, vUv).g;
       float b = texture2D(tDiffuse, vUv - caOffset).b;
       vec3 col = vec3(r, g, b);
 
       float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
-      col = mix(vec3(lum), col, 0.92);
+      col = mix(vec3(lum), col, 0.94);
 
-      vec3 shadowTint = vec3(0.89, 0.98, 1.06);
-      vec3 highlightTint = vec3(1.06, 0.99, 0.91);
+      vec3 shadowTint = vec3(0.90, 0.98, 1.05);
+      vec3 highlightTint = vec3(1.05, 0.99, 0.92);
       float hlMask = smoothstep(0.25, 0.85, lum);
       col *= mix(shadowTint, highlightTint, hlMask);
 
-      col = pow(max(col, vec3(0.0)), vec3(1.03));
+      col = pow(max(col, vec3(0.0)), vec3(1.02));
 
-      float vig = 1.0 - smoothstep(0.18, 0.78, r2) * 0.24;
+      float vig = 1.0 - smoothstep(0.20, 0.78, r2) * 0.22;
       col *= vig;
 
-      float grain = (randGrain(vUv * 800.0 + fract(uTime * 13.7)) - 0.5) * 0.020;
+      float grain = (randGrain(vUv * 800.0 + fract(uTime * 13.7)) - 0.5) * 0.012;
       col += grain;
 
       gl_FragColor = vec4(max(col, vec3(0.0)), 1.0);
     }
   `
 };
+
+
+/* ============================================================================
+   11. BAITEREK MONUMENTAL VOLUMETRIC SKY BEAM, RISING ENERGY MOTES & FOUNTAIN PLUMES
+   ============================================================================ */
+export function createBaiterekBeamMaterial({
+  colorHex = 0xffcf48,
+  opacity = 0.40,
+  speed = 2.4,
+  verticalPow = 1.65,
+  edgePow = 2.5
+} = {}) {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color(colorHex) },
+      uOpacity: { value: opacity },
+      uSpeed: { value: speed },
+      uVertPow: { value: verticalPow },
+      uEdgePow: { value: edgePow },
+      uFogColor: { value: new THREE.Color(0x060a12) },
+      uFogDensity: { value: 0.00105 }
+    },
+    vertexShader: /* glsl */ `
+      varying vec2 vUv;
+      varying vec3 vNormalView;
+      varying vec3 vViewDir;
+      varying vec3 vWorldPos;
+      void main() {
+        vUv = uv;
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vWorldPos = wp.xyz;
+        vec4 mvPos = viewMatrix * wp;
+        vNormalView = normalize(normalMatrix * normal);
+        vViewDir = normalize(-mvPos.xyz);
+        gl_Position = projectionMatrix * mvPos;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform vec3 uColor;
+      uniform float uOpacity;
+      uniform float uSpeed;
+      uniform float uVertPow;
+      uniform float uEdgePow;
+      uniform vec3 uFogColor;
+      uniform float uFogDensity;
+      varying vec2 vUv;
+      varying vec3 vNormalView;
+      varying vec3 vViewDir;
+      varying vec3 vWorldPos;
+
+      void main() {
+        float edgeSoft = pow(abs(dot(normalize(vNormalView), normalize(vViewDir))), uEdgePow);
+        float baseIn = smoothstep(0.0, 0.045, vUv.y);
+        float topOut = pow(clamp(1.0 - vUv.y, 0.0, 1.0), uVertPow);
+        float energyWave = 0.84 + 0.16 * sin(vUv.y * 26.0 - uTime * uSpeed);
+        float swirl = 0.90 + 0.10 * sin(vUv.x * 12.56637 + vUv.y * 8.0 - uTime * (uSpeed * 0.7));
+        float dist = length(cameraPosition - vWorldPos);
+        float fogFade = exp(-pow(dist * uFogDensity * 0.65, 2.0));
+        float alpha = edgeSoft * baseIn * topOut * energyWave * swirl * uOpacity * fogFade;
+        if (alpha < 0.002) discard;
+        gl_FragColor = vec4(uColor * (0.95 + 0.25 * energyWave), alpha);
+      }
+    `
+  });
+}
+
+export function createBaiterekParticlesMaterial() {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uTime: { value: 0 },
+      uPixelRatio: { value: Math.min(window.devicePixelRatio || 1, 2) }
+    },
+    vertexShader: /* glsl */ `
+      attribute float aPhase;
+      attribute float aRadius;
+      attribute float aAngle;
+      attribute float aSpeed;
+      attribute float aSize;
+      attribute float aTint;
+      uniform float uTime;
+      uniform float uPixelRatio;
+      varying float vAlpha;
+      varying float vTint;
+
+      void main() {
+        float t = fract(aPhase + uTime * aSpeed);
+        float ang = aAngle + t * 5.2 + uTime * 0.35;
+        float r = aRadius * (0.60 + 0.85 * t);
+        vec3 pos = vec3(
+          cos(ang) * r,
+          55.5 + t * 235.0,
+          sin(ang) * r
+        );
+        vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+        gl_PointSize = aSize * uPixelRatio * (260.0 / max(-mvPos.z, 1.0));
+        vAlpha = smoothstep(0.0, 0.08, t) * pow(1.0 - t, 1.4) * 0.72;
+        vTint = aTint;
+        gl_Position = projectionMatrix * mvPos;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      varying float vAlpha;
+      varying float vTint;
+
+      void main() {
+        vec2 c = gl_PointCoord - 0.5;
+        float d2 = dot(c, c);
+        if (d2 > 0.25) discard;
+        float glow = exp(-d2 * 16.0);
+        vec3 col = mix(vec3(1.0, 0.82, 0.32), vec3(0.22, 0.90, 1.0), vTint * 0.45);
+        gl_FragColor = vec4(col, glow * vAlpha);
+      }
+    `
+  });
+}
+
+export function createFountainPlumeMaterial() {
+  return new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    uniforms: {
+      uTime: { value: 0 },
+      uPixelRatio: { value: Math.min(window.devicePixelRatio || 1, 2) }
+    },
+    vertexShader: /* glsl */ `
+      attribute float aPhase;
+      attribute float aSpeed;
+      attribute vec2 aDir;
+      attribute float aHeight;
+      attribute float aTint;
+      uniform float uTime;
+      uniform float uPixelRatio;
+      varying float vAlpha;
+      varying float vTint;
+
+      void main() {
+        float t = fract(aPhase + uTime * aSpeed);
+        float arc = 4.0 * t * (1.0 - t);
+        vec3 pos = position;
+        pos.x += aDir.x * t * 1.65;
+        pos.z += aDir.y * t * 1.65;
+        pos.y += aHeight * arc;
+        vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
+        gl_PointSize = (2.2 + 1.4 * arc) * uPixelRatio * (180.0 / max(-mvPos.z, 1.0));
+        vAlpha = smoothstep(0.0, 0.14, t) * smoothstep(1.0, 0.55, t) * 0.42;
+        vTint = aTint;
+        gl_Position = projectionMatrix * mvPos;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      varying float vAlpha;
+      varying float vTint;
+
+      void main() {
+        vec2 c = gl_PointCoord - 0.5;
+        float d2 = dot(c, c);
+        if (d2 > 0.25) discard;
+        float dotSoft = exp(-d2 * 14.0);
+        vec3 col = mix(vec3(0.28, 0.88, 1.0), vec3(1.0, 0.80, 0.44), vTint * 0.32);
+        gl_FragColor = vec4(col, dotSoft * vAlpha);
+      }
+    `
+  });
+}
