@@ -1,8 +1,8 @@
 /**
  * Astana -> Night City 2077
  * Real Photorealistic PBR & 32-Bit HDRI Asset Loader
- * Loads all 21 textures from ./assets/pbr/ with accurate color spaces,
- * anisotropic filtering, seamless wrapping, and RGBELoader PMREM HDRI reflections.
+ * Loads all genuine 2K Poly Haven urban PBR sets, specialty architectural maps (ETFE, Geodesic Glass),
+ * and Shanghai Bund 32-bit HDRI via RGBELoader + PMREMGenerator, synced through LoadingManager.
  */
 import * as THREE from 'three';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
@@ -107,12 +107,6 @@ export function loadPBRAssets(renderer, onEnvReady) {
       srgb: true,
       wrap: THREE.RepeatWrapping
     }),
-    skyscraper: {
-      albedo: loadTex('skyscraper_albedo.jpg', { srgb: true }),
-      emissive: loadTex('skyscraper_emissive.jpg', { srgb: true }),
-      normal: loadTex('skyscraper_normal.jpg'),
-      rough: loadTex('skyscraper_rough.jpg')
-    },
     asphalt: {
       albedo: loadTex('asphalt_albedo.jpg', { srgb: true }),
       normal: loadTex('asphalt_normal.jpg'),
@@ -137,6 +131,15 @@ export function loadPBRAssets(renderer, onEnvReady) {
       albedo: loadTex('akorda_marble_albedo.jpg', { srgb: true, repeatX: 3, repeatY: 2 }),
       normal: loadTex('akorda_marble_normal.jpg', { repeatX: 3, repeatY: 2 }),
       rough: loadTex('akorda_marble_rough.jpg', { repeatX: 3, repeatY: 2 })
+    },
+    etfe: {
+      albedo: loadTex('etfe_albedo.jpg', { srgb: true, repeatX: 14, repeatY: 6 }),
+      normal: loadTex('etfe_normal.jpg', { repeatX: 14, repeatY: 6 }),
+      rough: loadTex('etfe_rough.jpg', { repeatX: 14, repeatY: 6 })
+    },
+    baiterekGlass: {
+      normal: loadTex('baiterek_normal.jpg', { repeatX: 4, repeatY: 2 }),
+      rough: loadTex('baiterek_rough.jpg', { repeatX: 4, repeatY: 2 })
     },
     palaceWindow: createMullionedPalaceWindowTexture(),
     envMap: null,

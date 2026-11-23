@@ -1,6 +1,10 @@
 /**
- * Procedural High-Res Cyberpunk Billboard Canvas Textures & Neon Studio PMREM Environment Map
- * Zero external image dependencies — crisp typography, Kazakh/Cyrillic + Katakana + Cyber UI graphics
+ * Procedural High-Res Cyberpunk Signage Textures & Procedural Fallback Environment Map
+ * - 9 Mega-Billboard Canvas Textures (1024x512 / 512x1024)
+ * - 12 Vertical Projecting Neon Blade Sign Textures (256x1024):
+ *   КАЗ-ТЕХ, СИНТЕЗ-77, НЕЙРО-СЕТЬ, АСТАНА-2077, КИБЕР-ДОК, ЭСИЛЬ-БАР,
+ *   ДРОН-ТАКСИ, КВАНТ, БИО-СОФТ, МЕГА-СИТИ, QAZ-CORP, KHAN-TECH
+ * - 4 Rooftop Neon Sign Textures (512x256)
  */
 import * as THREE from 'three';
 
@@ -8,10 +12,10 @@ const BILLBOARD_DESIGNS = [
   {
     id: 'qazcorp',
     orientation: 'vertical',
-    bg1: '#0a0702',
-    bg2: '#1f1600',
+    bg1: '#070603',
+    bg2: '#171104',
     primary: '#FCEE0A',
-    accent: '#00F0FF',
+    accent: '#00E5FF',
     brand: 'QAZ-CORP',
     sub: 'NEURAL SYNTH // 2077',
     kz: 'ҚАЗ-КОРП · БОЛАШАҚ',
@@ -22,10 +26,10 @@ const BILLBOARD_DESIGNS = [
   {
     id: 'baiterek_net',
     orientation: 'vertical',
-    bg1: '#03111c',
-    bg2: '#071f33',
-    primary: '#00F0FF',
-    accent: '#FCEE0A',
+    bg1: '#030c14',
+    bg2: '#071b2b',
+    primary: '#00E5FF',
+    accent: '#FF9E2C',
     brand: 'BAITEREK',
     sub: 'NET-RUNNER CORE',
     kz: 'БӘЙТЕРЕК // ЖЕЛІ',
@@ -36,10 +40,10 @@ const BILLBOARD_DESIGNS = [
   {
     id: 'khantech',
     orientation: 'vertical',
-    bg1: '#1a0211',
-    bg2: '#330623',
-    primary: '#FF005C',
-    accent: '#00F0FF',
+    bg1: '#14030c',
+    bg2: '#28061a',
+    primary: '#FF1E56',
+    accent: '#00E5FF',
     brand: 'KHAN-TECH',
     sub: 'CYBERNETICS & BIO',
     kz: 'ХАН-ТЕХ // КИБЕР',
@@ -50,9 +54,9 @@ const BILLBOARD_DESIGNS = [
   {
     id: 'esil_syndicate',
     orientation: 'vertical',
-    bg1: '#190207',
-    bg2: '#2e0510',
-    primary: '#FF003C',
+    bg1: '#140307',
+    bg2: '#26050e',
+    primary: '#FF1E56',
     accent: '#FCEE0A',
     brand: 'ESIL',
     sub: 'SYNDICATE // 01',
@@ -64,10 +68,10 @@ const BILLBOARD_DESIGNS = [
   {
     id: 'steppe_av',
     orientation: 'horizontal',
-    bg1: '#060c18',
-    bg2: '#13192b',
-    primary: '#FF9B00',
-    accent: '#00F0FF',
+    bg1: '#050a14',
+    bg2: '#101728',
+    primary: '#FF9E2C',
+    accent: '#00E5FF',
     brand: 'STEPPE DYNAMICS',
     sub: 'AV-9 AEROSPACE SPINNER // ZERO-G TURBINE',
     kz: 'ДАЛА ДИНАМИКС · АЭРО-ТРАНСПОРТ',
@@ -78,10 +82,10 @@ const BILLBOARD_DESIGNS = [
   {
     id: 'astana_2077',
     orientation: 'horizontal',
-    bg1: '#0c0519',
-    bg2: '#22093a',
+    bg1: '#090514',
+    bg2: '#19082b',
     primary: '#FCEE0A',
-    accent: '#FF005C',
+    accent: '#FF1E56',
     brand: 'ASTANA 2077',
     sub: 'WELCOME TO NUR-CITY // NIGHT SECTOR',
     kz: 'АСТАНА 2077 · НҰР-СИТИ',
@@ -92,10 +96,10 @@ const BILLBOARD_DESIGNS = [
   {
     id: 'samruk_bio',
     orientation: 'vertical',
-    bg1: '#0c031c',
-    bg2: '#210742',
+    bg1: '#090414',
+    bg2: '#1a0730',
     primary: '#D946EF',
-    accent: '#00F0FF',
+    accent: '#00E5FF',
     brand: 'SAMRUK BIO',
     sub: 'KINETIC OPTICS MK-IV',
     kz: 'САМРҰҚ // ОПТИКА',
@@ -106,10 +110,10 @@ const BILLBOARD_DESIGNS = [
   {
     id: 'expo_grid',
     orientation: 'horizontal',
-    bg1: '#021614',
-    bg2: '#052b2a',
+    bg1: '#021110',
+    bg2: '#052224',
     primary: '#00FFB3',
-    accent: '#00F0FF',
+    accent: '#00E5FF',
     brand: 'EXPO // QUANTUM',
     sub: 'NUR ALEM FUSION GRID · 99.98% OUTPUT',
     kz: 'НҰР ӘЛЕМ · ЭНЕРГИЯ 2077',
@@ -120,10 +124,10 @@ const BILLBOARD_DESIGNS = [
   {
     id: 'noir_kumys',
     orientation: 'vertical',
-    bg1: '#180c02',
-    bg2: '#2c1205',
-    primary: '#00F0FF',
-    accent: '#FF005C',
+    bg1: '#120803',
+    bg2: '#230e04',
+    primary: '#00E5FF',
+    accent: '#FF9E2C',
     brand: 'NEON QYMIZ',
     sub: 'SYNTH-BOOST 400ML',
     kz: 'ҚЫМЫЗ 2077 · ЭНЕРГИЯ',
@@ -131,6 +135,21 @@ const BILLBOARD_DESIGNS = [
     badge: '100% SYNTH-STEPPE',
     emblem: 'wave'
   }
+];
+
+const BLADE_SIGN_DESIGNS = [
+  { id: 'kaztech', text: 'КАЗ-ТЕХ', sub: 'CYBERNETICS', jp: 'カズテック', bg: '#050b14', primary: '#00E5FF', accent: '#FF9E2C' },
+  { id: 'sintez77', text: 'СИНТЕЗ-77', sub: 'BIO-AUGMENT', jp: 'シンテズ77', bg: '#12040a', primary: '#FF1E56', accent: '#00E5FF' },
+  { id: 'neuroset', text: 'НЕЙРО-СЕТЬ', sub: 'LINK 24/7', jp: 'ニューロネット', bg: '#041016', primary: '#00E5FF', accent: '#FCEE0A' },
+  { id: 'astana2077', text: 'АСТАНА-2077', sub: 'NURZHOL CORE', jp: 'アスタナ2077', bg: '#100c03', primary: '#FCEE0A', accent: '#00E5FF' },
+  { id: 'kiberdok', text: 'КИБЕР-ДОК', sub: 'RIPPER CLINIC', jp: 'サイバー医師', bg: '#140308', primary: '#FF1E56', accent: '#FF9E2C' },
+  { id: 'esilbar', text: 'ЭСИЛЬ-БАР', sub: 'SYNTH LOUNGE', jp: 'エシル・バー', bg: '#140a03', primary: '#FF9E2C', accent: '#FF1E56' },
+  { id: 'drontaxi', text: 'ДРОН-ТАКСИ', sub: 'AV-TRANSIT', jp: 'ドローン便', bg: '#040e18', primary: '#00E5FF', accent: '#FCEE0A' },
+  { id: 'kvant', text: 'КВАНТ', sub: 'QUANTUM OPS', jp: 'クォンタム', bg: '#031210', primary: '#00FFB3', accent: '#00E5FF' },
+  { id: 'biosoft', text: 'БИО-СОФТ', sub: 'NEURAL OS', jp: 'バイオソフト', bg: '#0d0416', primary: '#E879F9', accent: '#00E5FF' },
+  { id: 'megacity', text: 'МЕГА-СИТИ', sub: 'SECTOR 07', jp: 'メガシティ', bg: '#120804', primary: '#FF9E2C', accent: '#00E5FF' },
+  { id: 'qazcorp_blade', text: 'QAZ-CORP', sub: 'TOWER LINK', jp: 'カズ・コープ', bg: '#100d03', primary: '#FCEE0A', accent: '#FF1E56' },
+  { id: 'khantech_blade', text: 'KHAN-TECH', sub: 'OPTICS LAB', jp: 'ハンテック', bg: '#14030c', primary: '#FF1E56', accent: '#00E5FF' }
 ];
 
 function drawEmblem(ctx, type, cx, cy, r, primary, accent) {
@@ -141,7 +160,6 @@ function drawEmblem(ctx, type, cx, cy, r, primary, accent) {
   ctx.lineWidth = 4;
 
   if (type === 'orb') {
-    // Stylized Baiterek orb + cradle ribs
     ctx.beginPath();
     ctx.arc(0, -r * 0.25, r * 0.42, 0, Math.PI * 2);
     ctx.stroke();
@@ -161,7 +179,6 @@ function drawEmblem(ctx, type, cx, cy, r, primary, accent) {
     ctx.ellipse(0, -r * 0.25, r * 0.78, r * 0.22, -0.25, 0, Math.PI * 2);
     ctx.stroke();
   } else if (type === 'tent') {
-    // Stylized Khan Shatyr tilted spire
     ctx.beginPath();
     ctx.moveTo(-r * 0.85, r * 0.65);
     ctx.quadraticCurveTo(-r * 0.1, r * 0.1, r * 0.22, -r * 0.85);
@@ -216,7 +233,6 @@ function drawEmblem(ctx, type, cx, cy, r, primary, accent) {
       ctx.stroke();
     }
   } else {
-    // Stylized wave / bars
     for (let i = -3; i <= 3; i++) {
       const h = (1 - Math.abs(i) / 4.2) * r * 0.8;
       ctx.fillStyle = i % 2 === 0 ? primary : accent;
@@ -236,16 +252,14 @@ function createBillboardCanvasTexture(cfg) {
   canvas.height = h;
   const ctx = canvas.getContext('2d');
 
-  // Deep cyber gradient background
   const grad = ctx.createLinearGradient(0, 0, w, h);
   grad.addColorStop(0, cfg.bg1);
   grad.addColorStop(1, cfg.bg2);
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, w, h);
 
-  // Tech grid lines
   ctx.strokeStyle = cfg.primary;
-  ctx.globalAlpha = 0.1;
+  ctx.globalAlpha = 0.09;
   ctx.lineWidth = 1;
   for (let x = 0; x < w; x += 32) {
     ctx.beginPath();
@@ -261,7 +275,6 @@ function createBillboardCanvasTexture(cfg) {
   }
   ctx.globalAlpha = 1;
 
-  // Chamfered neon border frame
   const pad = 18;
   const cut = 34;
   ctx.strokeStyle = cfg.primary;
@@ -276,12 +289,10 @@ function createBillboardCanvasTexture(cfg) {
   ctx.closePath();
   ctx.stroke();
 
-  // Accent corner bars
   ctx.fillStyle = cfg.accent;
   ctx.fillRect(pad + 12, pad + 12, isVert ? 120 : 180, 10);
   ctx.fillRect(w - pad - (isVert ? 140 : 210), h - pad - 22, isVert ? 128 : 198, 10);
 
-  // Hazard diagonal stripe strip
   ctx.save();
   ctx.fillStyle = cfg.primary;
   ctx.globalAlpha = 0.85;
@@ -300,32 +311,27 @@ function createBillboardCanvasTexture(cfg) {
   ctx.restore();
 
   if (isVert) {
-    // Top badge
     ctx.fillStyle = cfg.accent;
     ctx.font = '700 22px "JetBrains Mono", monospace';
     ctx.fillText(cfg.badge, 40, 74);
 
-    // Katakana line
     ctx.fillStyle = cfg.primary;
     ctx.globalAlpha = 0.85;
     ctx.font = '700 28px sans-serif';
     ctx.fillText(cfg.jp, 40, 122);
     ctx.globalAlpha = 1;
 
-    // Central glowing emblem
     drawEmblem(ctx, cfg.emblem, w / 2, 310, 130, cfg.primary, cfg.accent);
 
-    // Bold Brand Title
     ctx.save();
     ctx.shadowColor = cfg.primary;
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 22;
     ctx.fillStyle = cfg.primary;
     ctx.font = '900 72px "Orbitron", "Arial Black", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(cfg.brand, w / 2, 545, w - 68);
     ctx.restore();
 
-    // Subtitle pill
     ctx.fillStyle = cfg.accent;
     ctx.fillRect(42, 580, w - 84, 52);
     ctx.fillStyle = '#05070d';
@@ -333,13 +339,11 @@ function createBillboardCanvasTexture(cfg) {
     ctx.textAlign = 'center';
     ctx.fillText(cfg.sub, w / 2, 615, w - 100);
 
-    // Kazakh Cyrillic display
     ctx.fillStyle = '#ffffff';
     ctx.font = '700 30px "Rajdhani", "Segoe UI", sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(cfg.kz, w / 2, 700, w - 76);
 
-    // Telemetry / barcode footer
     ctx.fillStyle = cfg.primary;
     ctx.globalAlpha = 0.7;
     for (let bx = 46; bx < w - 46; bx += 11) {
@@ -352,7 +356,6 @@ function createBillboardCanvasTexture(cfg) {
     ctx.textAlign = 'left';
     ctx.fillText('ASTANA // 51.1282N 71.4304E', 44, 878);
   } else {
-    // Horizontal mega-billboard layout
     drawEmblem(ctx, cfg.emblem, 175, h / 2 - 20, 118, cfg.primary, cfg.accent);
 
     ctx.textAlign = 'left';
@@ -378,7 +381,6 @@ function createBillboardCanvasTexture(cfg) {
     ctx.font = '800 25px "JetBrains Mono", monospace';
     ctx.fillText(cfg.sub, 346, 336, w - 410);
 
-    // Barcode right corner
     ctx.fillStyle = cfg.primary;
     ctx.globalAlpha = 0.65;
     for (let bx = 48; bx < 290; bx += 10) {
@@ -395,13 +397,122 @@ function createBillboardCanvasTexture(cfg) {
   return { texture, orientation: cfg.orientation, id: cfg.id, primary: cfg.primary };
 }
 
+function createBladeSignCanvasTexture(cfg) {
+  const w = 256;
+  const h = 1024;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  // Deep dark smoked acrylic sign backing
+  ctx.fillStyle = cfg.bg;
+  ctx.fillRect(0, 0, w, h);
+
+  // Subtle horizontal LED pixel grid
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+  for (let y = 0; y < h; y += 8) {
+    ctx.fillRect(10, y, w - 20, 2);
+  }
+
+  // Crisp glowing double neon frame border
+  ctx.strokeStyle = cfg.primary;
+  ctx.lineWidth = 8;
+  ctx.shadowColor = cfg.primary;
+  ctx.shadowBlur = 16;
+  ctx.strokeRect(14, 14, w - 28, h - 28);
+  ctx.shadowBlur = 0;
+
+  // Top & bottom accent bars
+  ctx.fillStyle = cfg.accent;
+  ctx.fillRect(28, 30, w - 56, 18);
+  ctx.fillRect(28, h - 48, w - 56, 18);
+
+  // Katakana header
+  ctx.fillStyle = cfg.accent;
+  ctx.font = '700 22px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(cfg.jp, w / 2, 82, w - 40);
+
+  // Main stacked/vertical bold Cyrillic neon lettering (rotated 90deg for razor-large readability!)
+  ctx.save();
+  ctx.translate(w / 2, h * 0.49);
+  ctx.rotate(-Math.PI / 2);
+  ctx.shadowColor = cfg.primary;
+  ctx.shadowBlur = 24;
+  ctx.fillStyle = cfg.primary;
+  ctx.font = '900 94px "Orbitron", "Rajdhani", "Arial Black", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(cfg.text, 0, -14, h - 220);
+
+  // Subtitle stripe below main title
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 32px "JetBrains Mono", monospace';
+  ctx.fillText(cfg.sub, 0, 56, h - 240);
+  ctx.restore();
+
+  // Bottom status LED dots
+  for (let i = 0; i < 4; i++) {
+    ctx.fillStyle = i % 2 === 0 ? cfg.primary : cfg.accent;
+    ctx.fillRect(42 + i * 46, h - 82, 32, 10);
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  texture.needsUpdate = true;
+  return { texture, id: cfg.id, primary: cfg.primary, accent: cfg.accent };
+}
+
+export function createRoofSignTexture(text, sub, primaryHex, accentHex) {
+  const w = 512;
+  const h = 192;
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#05070d';
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.strokeStyle = primaryHex;
+  ctx.lineWidth = 6;
+  ctx.strokeRect(8, 8, w - 16, h - 16);
+
+  ctx.save();
+  ctx.shadowColor = primaryHex;
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = primaryHex;
+  ctx.font = '900 66px "Orbitron", "Rajdhani", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, w / 2, 98, w - 44);
+  ctx.restore();
+
+  ctx.fillStyle = accentHex;
+  ctx.font = '700 24px "JetBrains Mono", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(sub, w / 2, 152, w - 44);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 export function createAllBillboardTextures() {
   return BILLBOARD_DESIGNS.map(createBillboardCanvasTexture);
 }
 
+export function createAllBladeSignTextures() {
+  return BLADE_SIGN_DESIGNS.map(createBladeSignCanvasTexture);
+}
+
 /**
- * Generates a rich procedural Night City neon environment cubemap via PMREMGenerator
- * so metallic chrome, glass towers, Baiterek gold orb, and Nur Alem gleam realistically.
+ * Generates an instant procedural PMREM environment cubemap while the real 32-bit
+ * Shanghai Bund HDRI streams in.
  */
 export function createNeonEnvironmentMap(renderer) {
   const pmrem = new THREE.PMREMGenerator(renderer);
@@ -410,7 +521,6 @@ export function createNeonEnvironmentMap(renderer) {
   const envScene = new THREE.Scene();
   envScene.background = new THREE.Color(0x060814);
 
-  // Upper cool indigo dome glow
   const skyGeo = new THREE.SphereGeometry(50, 24, 16);
   const skyMat = new THREE.MeshBasicMaterial({
     color: 0x0b1228,
@@ -418,12 +528,11 @@ export function createNeonEnvironmentMap(renderer) {
   });
   envScene.add(new THREE.Mesh(skyGeo, skyMat));
 
-  // Neon horizon reflection bands (Cyan, Magenta, Cyber Gold, Deep Amber)
   const bands = [
-    { color: 0x00f0ff, pos: [0, 8, -32], scale: [46, 6, 1], intensity: 2.2 },
-    { color: 0xff0066, pos: [32, 6, 0], scale: [1, 7, 46], intensity: 2.2 },
-    { color: 0xffc83b, pos: [-32, 10, 0], scale: [1, 6, 42], intensity: 2.0 },
-    { color: 0x8b5cf6, pos: [0, 7, 32], scale: [44, 5, 1], intensity: 1.8 },
+    { color: 0x00e5ff, pos: [0, 8, -32], scale: [46, 6, 1], intensity: 2.0 },
+    { color: 0xff1e56, pos: [32, 6, 0], scale: [1, 7, 46], intensity: 1.8 },
+    { color: 0xff9e2c, pos: [-32, 10, 0], scale: [1, 6, 42], intensity: 2.0 },
+    { color: 0x4b74a8, pos: [0, 7, 32], scale: [44, 5, 1], intensity: 1.6 },
     { color: 0xffe099, pos: [0, 28, -10], scale: [24, 2, 24], intensity: 1.4 }
   ];
 

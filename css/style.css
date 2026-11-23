@@ -70,35 +70,6 @@ body {
   background: radial-gradient(circle at 50% 48%, transparent 56%, rgba(4, 5, 12, 0.56) 100%);
 }
 
-/* Transient scanline + neon wave flash during Astana <-> Night City Shift */
-.shift-flash-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 3;
-  opacity: 0;
-  background:
-    repeating-linear-gradient(
-      0deg,
-      rgba(0, 240, 255, 0.06) 0px,
-      rgba(0, 240, 255, 0.06) 1px,
-      transparent 1px,
-      transparent 4px
-    ),
-    linear-gradient(125deg, rgba(252, 238, 10, 0.14), rgba(0, 240, 255, 0.12), rgba(255, 0, 60, 0.16));
-  transition: opacity 0.25s ease;
-}
-
-.shift-flash-overlay.pulse {
-  animation: cyber-shift-flash 0.72s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes cyber-shift-flash {
-  0% { opacity: 0; }
-  25% { opacity: 0.78; }
-  100% { opacity: 0; }
-}
-
 /* ============================================================================
    BOOT OVERLAY
    ============================================================================ */
@@ -220,15 +191,6 @@ body.hud-hidden .hud-layer {
   pointer-events: none;
 }
 
-body.mode-real .hud-panel {
-  border-color: rgba(255, 190, 85, 0.34);
-}
-
-body.mode-real .hud-panel::before {
-  background: var(--astana-gold);
-  box-shadow: 0 0 10px rgba(255, 190, 85, 0.5);
-}
-
 /* ============================================================================
    TOP BAR
    ============================================================================ */
@@ -280,11 +242,6 @@ body.mode-real .hud-panel::before {
   text-shadow: 0 0 12px rgba(252, 238, 10, 0.45);
 }
 
-body.mode-real .brand-title .accent-year {
-  color: var(--astana-gold);
-  text-shadow: 0 0 12px rgba(255, 190, 85, 0.4);
-}
-
 .brand-sub {
   font-family: var(--font-mono);
   font-size: 0.65rem;
@@ -292,28 +249,6 @@ body.mode-real .brand-title .accent-year {
   color: var(--cyber-cyan);
   margin-top: 2px;
   text-transform: uppercase;
-}
-
-body.mode-real .brand-sub {
-  color: var(--astana-gold);
-}
-
-.shift-pct-badge {
-  margin-left: auto;
-  padding: 4px 10px;
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: #05070d;
-  background: var(--cyber-yellow);
-  clip-path: var(--chamfer-sm);
-  letter-spacing: 0.06em;
-  min-width: 54px;
-  text-align: center;
-}
-
-body.mode-real .shift-pct-badge {
-  background: var(--astana-gold);
 }
 
 .telemetry-strip {
@@ -421,25 +356,6 @@ body.mode-real .shift-pct-badge {
   box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
 }
 
-.chip-btn[data-preset='astana_dusk'].active {
-  background: var(--astana-gold);
-  border-color: var(--astana-gold);
-  box-shadow: 0 0 14px rgba(255, 190, 85, 0.45);
-}
-
-.chip-btn[data-preset='blade_runner'].active {
-  background: #ff7a1a;
-  border-color: #ff7a1a;
-  box-shadow: 0 0 14px rgba(255, 122, 26, 0.45);
-}
-
-.chip-btn[data-preset='emp_overdrive'].active {
-  background: var(--cyber-crimson);
-  border-color: var(--cyber-crimson);
-  color: #fff;
-  box-shadow: 0 0 16px rgba(255, 0, 60, 0.5);
-}
-
 .icon-btn {
   width: 31px;
   height: 31px;
@@ -520,7 +436,7 @@ body.mode-real .shift-pct-badge {
   top: 112px;
   width: 355px;
   max-width: calc(100vw - 40px);
-  max-height: calc(100vh - 275px);
+  max-height: calc(100vh - 200px);
   overflow-y: auto;
   padding: 18px 18px 16px;
   transform: translateX(calc(100% + 36px));
@@ -630,141 +546,12 @@ body.mode-real .shift-pct-badge {
 }
 
 /* ============================================================================
-   BOTTOM COMMAND DECK (LIVE MORPH SLIDER + LANDMARK DOCK)
+   BOTTOM COMMAND DECK (LANDMARK QUICK-JUMP DOCK)
    ============================================================================ */
 .hud-bottom {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 10px;
-}
-
-/* Signature Astana <-> Night City 2077 Shift Control Bar */
-.morph-deck {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 10px 16px;
-  width: min(820px, 96vw);
-  border-color: var(--panel-border-yellow);
-}
-
-.morph-slider-wrap {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.morph-endpoint {
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  white-space: nowrap;
-  transition: color 0.25s ease, text-shadow 0.25s ease;
-}
-
-.morph-real {
-  color: var(--astana-gold);
-}
-
-.morph-cyber {
-  color: var(--cyber-yellow);
-  text-shadow: 0 0 10px rgba(252, 238, 10, 0.45);
-}
-
-.slider-track-shell {
-  position: relative;
-  flex: 1;
-  height: 24px;
-  display: flex;
-  align-items: center;
-}
-
-.slider-track-shell::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.14);
-}
-
-.slider-fill {
-  position: absolute;
-  left: 0;
-  height: 5px;
-  width: 100%;
-  background: linear-gradient(90deg, var(--astana-gold) 0%, var(--cyber-cyan) 55%, var(--cyber-yellow) 100%);
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.55);
-  pointer-events: none;
-}
-
-.cyber-slider {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
-  height: 24px;
-}
-
-.cyber-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 22px;
-  background: var(--cyber-yellow);
-  border: 2px solid #05070d;
-  box-shadow: 0 0 14px rgba(252, 238, 10, 0.85);
-  clip-path: polygon(3px 0, 100% 0, 100% calc(100% - 3px), calc(100% - 3px) 100%, 0 100%, 0 3px);
-  transition: transform 0.15s ease;
-}
-
-.cyber-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.14);
-}
-
-.cyber-slider::-moz-range-thumb {
-  width: 16px;
-  height: 22px;
-  background: var(--cyber-yellow);
-  border: 2px solid #05070d;
-  border-radius: 0;
-  box-shadow: 0 0 14px rgba(252, 238, 10, 0.85);
-}
-
-.btn-shift-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
-  background: var(--cyber-yellow);
-  color: #05070d;
-  border: none;
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  cursor: pointer;
-  clip-path: var(--chamfer-sm);
-  box-shadow: 0 0 18px rgba(252, 238, 10, 0.42);
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.btn-shift-cta:hover {
-  background: #ffffff;
-  box-shadow: 0 0 24px rgba(0, 240, 255, 0.7);
-  transform: translateY(-1px);
-}
-
-body.mode-real .btn-shift-cta {
-  background: linear-gradient(90deg, var(--cyber-yellow), var(--cyber-cyan));
 }
 
 /* Landmark Quick-Jump Dock */
@@ -890,24 +677,9 @@ body.hud-hidden .hud-restore-chip {
     scrollbar-width: none;
   }
 
-  .morph-deck {
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 12px;
-  }
-
-  .morph-slider-wrap {
-    width: 100%;
-  }
-
-  .btn-shift-cta {
-    width: 100%;
-    justify-content: center;
-  }
-
   .dossier-drawer {
     top: auto;
-    bottom: 155px;
+    bottom: 84px;
     right: 12px;
     max-height: 46vh;
   }

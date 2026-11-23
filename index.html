@@ -36,13 +36,12 @@
   }
   </script>
 </head>
-<body class="mode-cyber">
+<body>
   <!-- FULL-BLEED 100VW x 100VH WEBGL STAGE -->
-  <canvas id="scene-canvas" aria-label="Интерактивная 3D сцена Астана Night City 2077"></canvas>
+  <canvas id="scene-canvas" aria-label="Интерактивная 3D сцена Астана 2077"></canvas>
 
-  <!-- Subtle cinematic edge vignette + transient shift glitch sweep -->
+  <!-- Subtle cinematic edge vignette -->
   <div class="stage-vignette" aria-hidden="true"></div>
-  <div class="shift-flash-overlay" id="shift-flash" aria-hidden="true"></div>
 
   <!-- BOOT LOADER OVERLAY -->
   <div class="boot-overlay" id="boot-overlay">
@@ -54,7 +53,7 @@
     </div>
   </div>
 
-  <!-- DIEGETIC CYBERPUNK 2077 HUD LAYER -->
+  <!-- DIEGETIC HUD LAYER -->
   <div class="hud-layer" id="hud-layer">
     <!-- TOP BAR -->
     <header class="hud-top">
@@ -70,9 +69,8 @@
           </div>
           <div class="brand-titles">
             <h1 class="brand-title">ASTANA <span class="slash">//</span> <span class="accent-year">2077</span></h1>
-            <div class="brand-sub" id="status-mode-label">NIGHT CITY OVERRIDE · NURZHOL SECTOR</div>
+            <div class="brand-sub" id="status-mode-label">ASTANA // 2077 · NURZHOL SECTOR</div>
           </div>
-          <div class="shift-pct-badge" id="hud-cyber-pct">100%</div>
         </div>
         <div class="telemetry-strip">
           <span class="tele-item"><span class="tele-dot"></span><span id="tele-coords">51°07'42" N · 71°25'50" E</span></span>
@@ -83,17 +81,8 @@
         </div>
       </div>
 
-      <!-- Camera Modes + Atmosphere Presets + Utilities -->
+      <!-- Camera Modes + Utilities -->
       <div class="hud-top-right">
-        <!-- Atmosphere Presets -->
-        <div class="hud-panel control-strip" role="group" aria-label="Атмосфера">
-          <span class="strip-label">ATMO</span>
-          <button type="button" class="chip-btn active" data-preset="neon_rain">NEON RAIN</button>
-          <button type="button" class="chip-btn" data-preset="blade_runner">BLADE RUNNER</button>
-          <button type="button" class="chip-btn" data-preset="astana_dusk">ASTANA DUSK</button>
-          <button type="button" class="chip-btn" data-preset="emp_overdrive">EMP OVERDRIVE</button>
-        </div>
-
         <!-- Camera Mode + Utility Tools -->
         <div class="hud-panel control-strip" role="group" aria-label="Камера и инструменты">
           <span class="strip-label">CAM</span>
@@ -188,35 +177,8 @@
       </div>
     </aside>
 
-    <!-- BOTTOM COMMAND DECK: LIVE SHIFT SLIDER + LANDMARK QUICK-JUMP DOCK -->
+    <!-- BOTTOM COMMAND DECK: LANDMARK QUICK-JUMP DOCK -->
     <footer class="hud-bottom">
-      <!-- ASTANA REALITY <-> NIGHT CITY 2077 TRANSFORMATION DECK -->
-      <div class="hud-panel morph-deck">
-        <div class="morph-slider-wrap">
-          <span class="morph-endpoint morph-real" id="label-real">АСТАНА 2026</span>
-          <div class="slider-track-shell">
-            <input
-              type="range"
-              id="cyber-slider"
-              class="cyber-slider"
-              min="0"
-              max="100"
-              value="100"
-              aria-label="Степень трансформации Астаны в Night City 2077"
-            />
-            <div class="slider-fill" id="slider-fill"></div>
-          </div>
-          <span class="morph-endpoint morph-cyber" id="label-cyber">NIGHT CITY 2077</span>
-        </div>
-
-        <button type="button" class="btn-shift-cta" id="btn-shift-toggle">
-          <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="10 1 3 10 9 10 8 17 15 8 9 8 10 1" />
-          </svg>
-          <span id="btn-shift-text">АСТАНА &larr; NIGHT CITY</span>
-        </button>
-      </div>
-
       <!-- LANDMARK QUICK-JUMP DOCK -->
       <nav class="hud-panel landmark-dock" id="landmark-dock" aria-label="Навигация по достопримечательностям Астаны">
         <!-- Populated cleanly via js/app.js from LANDMARKS -->

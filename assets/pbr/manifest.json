@@ -1,6 +1,16 @@
 {
+  "hdri": {
+    "id": "shanghai_bund",
+    "res": "2k",
+    "file": "nightcity_env.hdr"
+  },
+  "skyPano": {
+    "id": "storm_skyline_2048",
+    "file": "nightcity_sky_pano.jpg"
+  },
   "asphalt": {
-    "id": "aerial_asphalt_01",
+    "id": "asphalt_02",
+    "res": "2k",
     "maps": {
       "albedo": "asphalt_albedo.jpg",
       "normal": "asphalt_normal.jpg",
@@ -8,31 +18,56 @@
     }
   },
   "concrete": {
-    "id": "beige_wall_001",
+    "id": "concrete_wall_008",
+    "res": "2k",
     "maps": {
       "albedo": "concrete_albedo.jpg",
       "normal": "concrete_normal.jpg",
       "rough": "concrete_rough.jpg"
     }
   },
-  "marble": {
-    "id": "floor_tiles_02",
-    "maps": {
-      "albedo": "marble_albedo.jpg",
-      "normal": "marble_normal.jpg",
-      "rough": "marble_rough.jpg"
-    }
-  },
   "metal": {
-    "id": "blue_metal_plate",
+    "id": "metal_plate_02",
+    "res": "2k",
     "maps": {
       "albedo": "metal_albedo.jpg",
       "normal": "metal_normal.jpg",
       "rough": "metal_rough.jpg"
     }
   },
-  "hdri": {
-    "id": "blue_lagoon_night",
-    "file": "nightcity_env.hdr"
+  "marble": {
+    "id": "granite_tile",
+    "res": "2k",
+    "maps": {
+      "albedo": "marble_albedo.jpg",
+      "normal": "marble_normal.jpg",
+      "rough": "marble_rough.jpg"
+    }
+  },
+  "akordaMarble": {
+    "id": "marble_01_ashlar_honed",
+    "res": "1024x1024",
+    "maps": {
+      "albedo": "akorda_marble_albedo.jpg",
+      "normal": "akorda_marble_normal.jpg",
+      "rough": "akorda_marble_rough.jpg"
+    }
+  },
+  "etfe": {
+    "id": "procedural_etfe_cushions",
+    "res": "1024x1024",
+    "maps": {
+      "albedo": "etfe_albedo.jpg",
+      "normal": "etfe_normal.jpg",
+      "rough": "etfe_rough.jpg"
+    }
+  },
+  "baiterekGlass": {
+    "id": "procedural_geodesic_glass",
+    "res": "1024x1024",
+    "maps": {
+      "normal": "baiterek_normal.jpg",
+      "rough": "baiterek_rough.jpg"
+    }
   }
 }

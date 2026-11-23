@@ -9,7 +9,8 @@ import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js'
 import {
   createPBRSkyscraperMaterial,
   createEsilRiverMaterial,
-  createWetRoadMaterial
+  createWetRoadMaterial,
+  createLightConeMaterial
 } from './shaders.js';
 import { cloneTiledPBR } from './pbrAssets.js';
 
@@ -175,57 +176,49 @@ export function buildBaiterek(pbr) {
   liftRing.position.y = 18;
   group.add(liftRing);
 
-  // GOLDEN CHAMELEON SAMRUK SPHERE (Physically reflective golden glass with real HDRI specular!)
+  // GOLDEN CHAMELEON SAMRUK SPHERE (Geodesic triangular glass facets reflecting shanghai_bund HDRI!)
+  const sphereGlassTex = cloneTiledPBR(pbr.baiterekGlass, 4, 2);
   const sphereMat = new THREE.MeshPhysicalMaterial({
     color: 0xe6ad34,
     emissive: 0xc97b14,
-    emissiveIntensity: 0.72,
+    emissiveIntensity: 0.56,
     metalness: 0.90,
-    roughness: 0.15,
+    roughness: 1.0,
+    roughnessMap: sphereGlassTex.rough,
+    normalMap: sphereGlassTex.normal,
+    normalScale: new THREE.Vector2(0.85, 0.85),
     clearcoat: 1.0,
-    clearcoatRoughness: 0.12,
-    normalMap: pbr.metal.normal,
-    normalScale: new THREE.Vector2(0.18, 0.18),
-    envMapIntensity: 2.3
+    clearcoatRoughness: 0.08,
+    envMapIntensity: 2.5
   });
-  const sphere = new THREE.Mesh(new THREE.IcosahedronGeometry(8.4, 3), sphereMat);
+  const sphere = new THREE.Mesh(new THREE.SphereGeometry(8.4, 64, 48), sphereMat);
   sphere.position.y = 48.0;
   sphere.castShadow = true;
   group.add(sphere);
 
-  const cageMat = new THREE.MeshBasicMaterial({
-    color: 0xdca444,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.28
-  });
-  const sphereCage = new THREE.Mesh(new THREE.IcosahedronGeometry(8.54, 2), cageMat);
-  sphereCage.position.y = 48.0;
-  group.add(sphereCage);
-
-  // Refined restrained 2077 holographic orbital data rings
+  // Sleek restrained orbital holographic ring around the golden sphere
   const holoRingGroup = new THREE.Group();
   holoRingGroup.position.y = 48.0;
 
   const ring1Mat = new THREE.MeshBasicMaterial({
-    color: 0x00d8f0,
+    color: 0x00e5ff,
     transparent: true,
-    opacity: 0.58,
+    opacity: 0.54,
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
-  const holoRing1 = new THREE.Mesh(new THREE.TorusGeometry(13.2, 0.15, 8, 64), ring1Mat);
+  const holoRing1 = new THREE.Mesh(new THREE.TorusGeometry(13.2, 0.14, 8, 72), ring1Mat);
   holoRing1.rotation.x = Math.PI / 2.35;
   holoRingGroup.add(holoRing1);
 
   const ring2Mat = new THREE.MeshBasicMaterial({
     color: 0xffc842,
     transparent: true,
-    opacity: 0.52,
+    opacity: 0.44,
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
-  const holoRing2 = new THREE.Mesh(new THREE.TorusGeometry(15.6, 0.12, 8, 64), ring2Mat);
+  const holoRing2 = new THREE.Mesh(new THREE.TorusGeometry(15.4, 0.10, 8, 72), ring2Mat);
   holoRing2.rotation.x = Math.PI / 1.7;
   holoRing2.rotation.y = 0.6;
   holoRingGroup.add(holoRing2);
@@ -233,44 +226,29 @@ export function buildBaiterek(pbr) {
 
   // Subtle focused vertical energy spire beam
   const beamMat = new THREE.MeshBasicMaterial({
-    color: 0x45d8f0,
+    color: 0x38d8f0,
     transparent: true,
-    opacity: 0.14,
+    opacity: 0.12,
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
-  const skyBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 1.05, 185, 12, 1, true), beamMat);
+  const skyBeam = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 1.0, 185, 12, 1, true), beamMat);
   skyBeam.position.y = 56 + 92.5;
   group.add(skyBeam);
 
-  const orbLight = new THREE.PointLight(0xffaa2b, 26, 95, 1.5);
+  const orbLight = new THREE.PointLight(0xffaa2b, 30, 105, 1.5);
   orbLight.position.set(0, 48, 0);
   group.add(orbLight);
 
   return {
     group,
-    update(time, cyber) {
+    update(time) {
       liftRing.position.y = 10 + (Math.sin(time * 0.65) * 0.5 + 0.5) * 29;
-      sphereMat.emissiveIntensity = THREE.MathUtils.lerp(0.24, 0.92 + Math.sin(time * 2.0) * 0.12, cyber);
-      orbLight.intensity = THREE.MathUtils.lerp(16, 32, cyber);
-      shaftMat.emissiveIntensity = THREE.MathUtils.lerp(0.15, 0.62, cyber);
-
-      ribMat.color.setHex(0xd4dde8).lerp(new THREE.Color(0x9cb4c8), cyber * 0.35);
-      trunkNeonMesh.visible = cyber > 0.05;
-      trunkNeonMat.emissiveIntensity = cyber * 1.35;
-      baseGlowMat.emissive.setHex(0xdca048).lerp(new THREE.Color(0x00d0e8), cyber);
-      baseGlowMat.emissiveIntensity = THREE.MathUtils.lerp(0.32, 1.25, cyber);
-
-      const ringScale = THREE.MathUtils.smoothstep(cyber, 0.12, 0.95);
-      holoRingGroup.visible = ringScale > 0.01;
-      holoRingGroup.scale.setScalar(0.6 + ringScale * 0.4);
-      holoRing1.rotation.z = time * 0.48;
-      holoRing2.rotation.z = -time * 0.32;
-      ring1Mat.opacity = ringScale * 0.56;
-      ring2Mat.opacity = ringScale * 0.48;
-
-      skyBeam.visible = cyber > 0.2;
-      beamMat.opacity = THREE.MathUtils.smoothstep(cyber, 0.2, 1.0) * (0.14 + 0.04 * Math.sin(time * 3.0));
+      sphereMat.emissiveIntensity = 0.56 + Math.sin(time * 2.0) * 0.10;
+      orbLight.intensity = 28 + Math.sin(time * 2.0) * 4;
+      holoRing1.rotation.z = time * 0.45;
+      holoRing2.rotation.z = -time * 0.30;
+      beamMat.opacity = 0.12 + 0.03 * Math.sin(time * 3.0);
     }
   };
 }
@@ -373,28 +351,30 @@ export function buildKhanShatyr(pbr) {
   }
   tentGeo.computeVertexNormals();
 
-  const tentRough = cloneTiledPBR(pbr.metal, 6, 4);
+  // Diamond-grid inflated ETFE cushion tent shell with warm interior atrium glow
+  const etfeTex = cloneTiledPBR(pbr.etfe, 14, 6);
   const tentMat = new THREE.MeshPhysicalMaterial({
-    color: 0x1d2b36,
-    emissive: 0x2e1c0a,
-    emissiveIntensity: 0.32,
-    roughnessMap: tentRough.rough,
-    normalMap: tentRough.normal,
-    normalScale: new THREE.Vector2(0.38, 0.38),
-    roughness: 0.34,
-    metalness: 0.28,
-    clearcoat: 0.92,
-    clearcoatRoughness: 0.16,
-    envMapIntensity: 1.85,
+    color: 0x7b8ea0,
+    map: etfeTex.albedo,
+    normalMap: etfeTex.normal,
+    normalScale: new THREE.Vector2(0.95, 0.95),
+    roughnessMap: etfeTex.rough,
+    roughness: 1.0,
+    metalness: 0.22,
+    emissive: 0x522e0c,
+    emissiveIntensity: 0.48,
+    clearcoat: 0.95,
+    clearcoatRoughness: 0.14,
+    envMapIntensity: 1.95,
     transparent: true,
-    opacity: 0.80,
+    opacity: 0.84,
     side: THREE.DoubleSide
   });
   const tentMesh = new THREE.Mesh(tentGeo, tentMat);
   tentMesh.castShadow = true;
   group.add(tentMesh);
 
-  // 32 Structural Dark-Chrome Steel Tension Cable Ribs + Horizontal Tension Rings (merged)
+  // 32 Structural Dark-Chrome Steel Tension Cable Ribs (merged)
   const cableGeos = [];
   const apex = new THREE.Vector3(tiltX, 6.5 + tentH, 0);
   const cables = 32;
@@ -426,19 +406,50 @@ export function buildKhanShatyr(pbr) {
   }
   group.add(new THREE.Mesh(mergeSafe(tripodGeos), makeMetalMat(pbr, { color: 0x2c3644, roughness: 0.4 })));
 
-  // Delicate translucent cyan telemetry scan ring climbing the tent in 2077 mode
-  const scanRingMat = new THREE.MeshBasicMaterial({
-    color: 0x38d8f0,
-    transparent: true,
-    opacity: 0.48,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
+  // Sleek glowing turquoise entrance portal on the East side facing Nurzhol Boulevard
+  const portalSteelMat = makeMetalMat(pbr, { color: 0x1e2733, roughness: 0.28, metalness: 0.88, env: 1.8 });
+  const portalGlowMat = new THREE.MeshStandardMaterial({
+    color: 0x00e5ff,
+    emissive: 0x00d8f0,
+    emissiveIntensity: 1.65,
+    roughness: 0.14,
+    metalness: 0.25
   });
-  const scanRing = new THREE.Mesh(new THREE.TorusGeometry(1, 0.022, 8, 48), scanRingMat);
-  scanRing.rotation.x = Math.PI / 2;
-  group.add(scanRing);
+  const portalGlassMat = new THREE.MeshPhysicalMaterial({
+    color: 0x08384a,
+    emissive: 0x085a72,
+    emissiveIntensity: 0.75,
+    roughness: 0.10,
+    metalness: 0.75,
+    clearcoat: 1.0,
+    transparent: true,
+    opacity: 0.78
+  });
+  const portalGroup = new THREE.Group();
+  portalGroup.position.set(30.4, 0, 0);
+  const portalCanopy = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.42, 13.5), portalSteelMat);
+  portalCanopy.position.set(1.2, 6.2, 0);
+  portalGroup.add(portalCanopy);
+  const portalTrim = new THREE.Mesh(new THREE.BoxGeometry(6.0, 0.16, 13.7), portalGlowMat);
+  portalTrim.position.set(1.2, 6.45, 0);
+  portalGroup.add(portalTrim);
+  for (const pz of [-5.8, 5.8]) {
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.65, 6.2, 0.65), portalSteelMat);
+    pillar.position.set(3.4, 3.1, pz);
+    portalGroup.add(pillar);
+    const pStrip = new THREE.Mesh(new THREE.BoxGeometry(0.18, 5.6, 0.18), portalGlowMat);
+    pStrip.position.set(3.75, 3.1, pz);
+    portalGroup.add(pStrip);
+  }
+  const portalGate = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5.4, 10.6), portalGlassMat);
+  portalGate.position.set(2.8, 2.7, 0);
+  portalGroup.add(portalGate);
+  const portalLight = new THREE.PointLight(0x00e5ff, 14, 38, 1.8);
+  portalLight.position.set(4.5, 4.2, 0);
+  portalGroup.add(portalLight);
+  group.add(portalGroup);
 
-  // Top Steel Spire & Restrained Cyan Apex Beacon
+  // Top Steel Spire & Cyan Apex Beacon
   const spireMat = new THREE.MeshStandardMaterial({
     color: 0xcbd5e1,
     emissive: 0x00d8f0,
@@ -451,32 +462,16 @@ export function buildKhanShatyr(pbr) {
   spire.rotation.z = -0.22;
   group.add(spire);
 
-  // Warm interior architectural lantern glow radiating outward from within the ETFE tent
-  const tentLight = new THREE.PointLight(0xffa940, 32, 105, 1.5);
+  // Warm interior architectural lantern glow radiating outward through ETFE cushions
+  const tentLight = new THREE.PointLight(0xffa940, 38, 115, 1.5);
   tentLight.position.set(tiltX * 0.25, 22, 0);
   group.add(tentLight);
 
   return {
     group,
-    update(time, cyber) {
-      // Real Astana Dusk: warm translucent champagne-ivory ETFE -> Night City: dark smoked charcoal-teal glass w/ warm amber interior!
-      tentMat.color.setHex(0xd4c6ae).lerp(new THREE.Color(0x1f2e3b), cyber);
-      tentMat.emissive.setHex(0x6b4b24).lerp(new THREE.Color(0x4a2a0e), cyber);
-      tentMat.emissiveIntensity = THREE.MathUtils.lerp(0.22, 0.46, cyber);
-
-      coreFloorMat.emissiveIntensity = THREE.MathUtils.lerp(0.65, 1.25, cyber);
-      arcadeMat.emissiveIntensity = THREE.MathUtils.lerp(0.65, 1.05, cyber);
-      rimNeonMat.emissive.setHex(0xdca248).lerp(new THREE.Color(0x00d0e8), cyber);
-      rimNeonMat.emissiveIntensity = THREE.MathUtils.lerp(0.25, 1.45, cyber);
-      spireMat.emissiveIntensity = THREE.MathUtils.lerp(0.2, 1.45, cyber);
-      tentLight.intensity = THREE.MathUtils.lerp(18, 36, cyber);
-
-      scanRing.visible = cyber > 0.15;
-      const t = (time * 0.18) % 1;
-      const r = THREE.MathUtils.lerp(27.6, 1.3, Math.pow(t, 0.68));
-      scanRing.position.set(Math.pow(t, 1.15) * tiltX, 6.5 + t * tentH, 0);
-      scanRing.scale.set(r * 1.09, r * 0.93, 12);
-      scanRingMat.opacity = Math.sin(t * Math.PI) * 0.44 * cyber;
+    update(time) {
+      tentMat.emissiveIntensity = 0.46 + Math.sin(time * 1.4) * 0.04;
+      portalGlowMat.emissiveIntensity = 1.55 + Math.sin(time * 2.4) * 0.18;
     }
   };
 }
@@ -593,16 +588,10 @@ export function buildAbuDhabiPlaza(pbr) {
 
   return {
     group,
-    update(time, cyber) {
+    update(time) {
       mainMat.userData.customUniforms.uTime.value = time;
-      mainMat.userData.customUniforms.uCyber.value = cyber;
-      mainMat.emissiveIntensity = THREE.MathUtils.lerp(0.75, 1.4, cyber);
       wingMat.userData.customUniforms.uTime.value = time;
-      wingMat.userData.customUniforms.uCyber.value = cyber;
-      wingMat.emissiveIntensity = THREE.MathUtils.lerp(0.7, 1.32, cyber);
 
-      finNeonMat.emissiveIntensity = THREE.MathUtils.lerp(0.1, 1.45, cyber);
-      amberNeonMat.emissiveIntensity = THREE.MathUtils.lerp(0.08, 1.35, cyber);
       const blink = Math.sin(time * 4.5) > 0.15 ? 1 : 0.15;
       beaconMat.color.setRGB(1.3 * blink, 0.08 * blink, 0.16 * blink);
     }
@@ -709,64 +698,70 @@ export function buildNurAlem(pbr) {
   buildCrescentPavilion(Math.PI - 0.62, Math.PI + 0.62);
   group.add(new THREE.Mesh(mergeSafe(wingMullionGeos), brushedSteelMat));
 
-  // Inner architectural exhibition decks + subtle quantum core
-  const innerCoreMat = new THREE.MeshStandardMaterial({
-    color: 0x38d8f0,
-    emissive: 0x16b8d8,
-    emissiveIntensity: 1.15,
-    roughness: 0.2
+  // Multi-tier architectural exhibition floor decks inside the EXPO sphere (warm & cool tiers)
+  const deckSlabMat = makeConcreteMat(pbr, { color: 0x222c3a, roughness: 0.65, env: 0.5 });
+  const deckCyanMat = new THREE.MeshStandardMaterial({
+    color: 0x62d4ee,
+    emissive: 0x16a8d0,
+    emissiveIntensity: 0.95,
+    roughness: 0.22
   });
-  const innerCore = new THREE.Mesh(new THREE.IcosahedronGeometry(5.8, 2), innerCoreMat);
-  innerCore.position.y = 25.5;
-  group.add(innerCore);
-
-  const deckMat = new THREE.MeshStandardMaterial({
-    color: 0x8cc2dc,
-    emissive: 0x1890b8,
-    emissiveIntensity: 0.65,
-    roughness: 0.28
+  const deckAmberMat = new THREE.MeshStandardMaterial({
+    color: 0xffc66e,
+    emissive: 0xd88820,
+    emissiveIntensity: 0.85,
+    roughness: 0.22
   });
   for (let i = -2; i <= 2; i++) {
-    const dy = i * 5.0;
-    const dr = Math.sqrt(Math.max(1, 20.5 * 20.5 - dy * dy)) * 0.86;
-    const deck = new THREE.Mesh(new THREE.TorusGeometry(dr, 0.2, 8, 42), deckMat);
-    deck.rotation.x = Math.PI / 2;
-    deck.position.y = 25.5 + dy;
-    group.add(deck);
+    const dy = i * 4.8;
+    const dr = Math.sqrt(Math.max(1, 20.4 * 20.4 - dy * dy)) * 0.85;
+    const slab = new THREE.Mesh(new THREE.CylinderGeometry(dr, dr, 0.45, 36), deckSlabMat);
+    slab.position.y = 25.5 + dy;
+    group.add(slab);
+
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(dr, 0.18, 8, 48),
+      i % 2 === 0 ? deckCyanMat : deckAmberMat
+    );
+    rim.rotation.x = Math.PI / 2;
+    rim.position.y = 25.5 + dy + 0.28;
+    group.add(rim);
   }
 
-  // Outer Monumental Geodesic Architectural Glass Sphere reflecting real 32-bit HDRI
+  // Central dark-titanium structural core elevator column inside sphere (replaces cartoon glowing ball)
+  const corePillar = new THREE.Mesh(
+    new THREE.CylinderGeometry(2.6, 3.2, 34, 24),
+    makeMetalMat(pbr, { color: 0x263242, roughness: 0.3, metalness: 0.88, env: 1.6 })
+  );
+  corePillar.position.y = 25.5;
+  group.add(corePillar);
+
+  // Outer Dark-Steel Diagrid Glass Facade Sphere reflecting shanghai_bund 32-bit HDRI
+  const diagridGlassTex = cloneTiledPBR(pbr.baiterekGlass, 8, 4);
   const glassMat = new THREE.MeshPhysicalMaterial({
-    color: 0x183452,
-    emissive: 0x051828,
-    emissiveIntensity: 0.25,
-    metalness: 0.86,
-    roughness: 0.12,
+    color: 0x152b42,
+    emissive: 0x061626,
+    emissiveIntensity: 0.26,
+    metalness: 0.88,
+    roughness: 1.0,
+    roughnessMap: diagridGlassTex.rough,
+    normalMap: diagridGlassTex.normal,
+    normalScale: new THREE.Vector2(0.85, 0.85),
     clearcoat: 1.0,
     clearcoatRoughness: 0.08,
-    envMapIntensity: 2.3,
+    envMapIntensity: 2.4,
     transparent: true,
-    opacity: 0.66
+    opacity: 0.68
   });
-  const outerSphere = new THREE.Mesh(new THREE.IcosahedronGeometry(22, 3), glassMat);
+  const outerSphere = new THREE.Mesh(new THREE.SphereGeometry(22, 64, 48), glassMat);
   outerSphere.position.y = 25.5;
   outerSphere.castShadow = true;
   group.add(outerSphere);
 
-  const latticeMat = new THREE.MeshBasicMaterial({
-    color: 0x62b4cc,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.26
-  });
-  const lattice = new THREE.Mesh(new THREE.IcosahedronGeometry(22.14, 2), latticeMat);
-  lattice.position.y = 25.5;
-  group.add(lattice);
-
   const turbineMat = new THREE.MeshStandardMaterial({
     color: 0x94a3b8,
     emissive: 0x18b89a,
-    emissiveIntensity: 0.8,
+    emissiveIntensity: 0.85,
     metalness: 0.85,
     roughness: 0.2
   });
@@ -777,50 +772,32 @@ export function buildNurAlem(pbr) {
   turbine2.position.set(4.3, 46.0, 0);
   group.add(turbine2);
 
+  // Crisp single equatorial holographic energy ring
   const eqRingMat = new THREE.MeshBasicMaterial({
-    color: 0x28d8c8,
+    color: 0x00e5ff,
     transparent: true,
-    opacity: 0.45,
+    opacity: 0.42,
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
-  const eqRing = new THREE.Mesh(new THREE.TorusGeometry(27.8, 0.18, 8, 72), eqRingMat);
+  const eqRing = new THREE.Mesh(new THREE.TorusGeometry(27.6, 0.14, 8, 72), eqRingMat);
   eqRing.position.y = 25.5;
   eqRing.rotation.x = Math.PI / 2.25;
   group.add(eqRing);
 
-  const sphereLight = new THREE.PointLight(0x28c4e0, 16, 95, 1.5);
+  const sphereLight = new THREE.PointLight(0x38c8e8, 16, 95, 1.5);
   sphereLight.position.set(0, 25.5, 0);
   group.add(sphereLight);
 
   return {
     group,
-    update(time, cyber) {
-      innerCore.rotation.y = time * 0.42;
-      innerCore.rotation.x = time * 0.2;
-      eqRing.rotation.z = time * 0.3;
+    update(time) {
+      eqRing.rotation.z = time * 0.28;
       turbine1.rotation.z = time * 2.0;
       turbine2.rotation.z = -time * 2.0;
-
       const pulse = 0.5 + 0.5 * Math.sin(time * 1.8);
-      glassMat.opacity = THREE.MathUtils.lerp(0.84, 0.58, cyber);
-      glassMat.emissiveIntensity = THREE.MathUtils.lerp(0.08, 0.32, cyber);
-      wingGlassMat.emissive.setHex(0x6c522c).lerp(new THREE.Color(0x0a344c), cyber);
-      wingGlassMat.emissiveIntensity = THREE.MathUtils.lerp(0.2, 0.48, cyber);
-
-      plazaRingGlowMat.emissive.setHex(0xdca854).lerp(new THREE.Color(0x1fc4e0), cyber);
-      plazaRingGlowMat.emissiveIntensity = THREE.MathUtils.lerp(0.28, 1.15, cyber);
-
-      innerCore.visible = cyber > 0.1;
-      innerCoreMat.emissiveIntensity = THREE.MathUtils.lerp(0.15, 1.05 + pulse * 0.22, cyber);
-      deckMat.emissive.setHex(0xc89a56).lerp(new THREE.Color(0x18a0c8), cyber);
-      deckMat.emissiveIntensity = THREE.MathUtils.lerp(0.22, 0.65, cyber);
-      latticeMat.opacity = THREE.MathUtils.lerp(0.18, 0.30, cyber);
-      turbineMat.emissiveIntensity = THREE.MathUtils.lerp(0.1, 0.9, cyber);
-
-      eqRing.visible = cyber > 0.12;
-      eqRingMat.opacity = THREE.MathUtils.smoothstep(cyber, 0.12, 0.9) * 0.46;
-      sphereLight.intensity = THREE.MathUtils.lerp(6, 18, cyber);
+      deckCyanMat.emissiveIntensity = 0.85 + pulse * 0.22;
+      deckAmberMat.emissiveIntensity = 0.78 + (1.0 - pulse) * 0.20;
     }
   };
 }
@@ -1091,23 +1068,7 @@ export function buildAkOrda(pbr) {
   }
   group.add(new THREE.Mesh(mergeSafe(domeRibGeos), goldMat));
 
-  // Delicate translucent holographic dome grid in 2077 mode
-  const holoDomeMat = new THREE.MeshBasicMaterial({
-    color: 0x38d8f0,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.2,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-  const holoDome = new THREE.Mesh(
-    new THREE.SphereGeometry(9.82, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2),
-    holoDomeMat
-  );
-  holoDome.position.set(0, 36.1, 0);
-  group.add(holoDome);
-
-  // Golden Cupola Lantern + Slender Spire + Sunburst
+  // Golden Cupola Lantern + Slender Spire + Sunburst (NO wireframe holoDome or neon corner lines!)
   const lantern = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.85, 2.4, 12), goldMat);
   lantern.position.set(0, 46.2, 0);
   group.add(lantern);
@@ -1118,75 +1079,22 @@ export function buildAkOrda(pbr) {
   sunOrb.position.set(0, 63.8, 0);
   group.add(sunOrb);
 
-  // Hollow perimeter cyan cornice edge lines
-  const cyberTrimMat = new THREE.MeshStandardMaterial({
-    color: 0x38d8f0,
-    emissive: 0x20c8e8,
-    emissiveIntensity: 0.72,
-    roughness: 0.18
-  });
-  const trimLinesGeos = [];
-  function addRectRim(w, d, y, thick = 0.2) {
-    const north = new THREE.BoxGeometry(w, thick, thick);
-    north.translate(0, y, -d * 0.5);
-    const south = new THREE.BoxGeometry(w, thick, thick);
-    south.translate(0, y, d * 0.5);
-    const west = new THREE.BoxGeometry(thick, thick, d);
-    west.translate(-w * 0.5, y, 0);
-    const east = new THREE.BoxGeometry(thick, thick, d);
-    east.translate(w * 0.5, y, 0);
-    trimLinesGeos.push(north, south, west, east);
-  }
-  addRectRim(28.6, 25.8, 25.95, 0.22);
-  addRectRim(25.6, 52.6, 21.05, 0.2);
-  const t3 = new THREE.TorusGeometry(10.05, 0.12, 6, 48);
-  t3.rotateX(Math.PI / 2);
-  t3.translate(0, 36.2, 0);
-  trimLinesGeos.push(t3);
-  const cyberTrimMesh = new THREE.Mesh(mergeSafe(trimLinesGeos), cyberTrimMat);
-  group.add(cyberTrimMesh);
-
-  // Dedicated warm-gold architectural facade uplights on West & East colonnades (subtle, zero blowout!)
-  const facadeLightW = new THREE.PointLight(0xffcb82, 4.5, 56, 2.0);
+  // Subtle warm & cool cyan architectural facade uplights on West & East colonnades & dome
+  const facadeLightW = new THREE.PointLight(0xffcb82, 5.2, 60, 2.0);
   facadeLightW.position.set(-20, 14, 0);
   group.add(facadeLightW);
 
-  const facadeLightE = new THREE.PointLight(0xffcb82, 4.5, 56, 2.0);
+  const facadeLightE = new THREE.PointLight(0xffcb82, 5.2, 60, 2.0);
   facadeLightE.position.set(20, 14, 0);
   group.add(facadeLightE);
 
-  const domeLight = new THREE.PointLight(0x38c8e8, 4.0, 75, 2.0);
+  const domeLight = new THREE.PointLight(0x28c8e8, 5.5, 80, 2.0);
   domeLight.position.set(0, 48, 0);
   group.add(domeLight);
 
   return {
     group,
-    update(time, cyber) {
-      marbleMat.color.setHex(0xb8afa0).lerp(new THREE.Color(0x768290), cyber * 0.42);
-      marbleMat.emissive.setHex(0x14110b).lerp(new THREE.Color(0x0a1018), cyber);
-      marbleMat.emissiveIntensity = THREE.MathUtils.lerp(0.06, 0.10, cyber);
-
-      trimMarbleMat.color.setHex(0xc4bbb0).lerp(new THREE.Color(0x828e9c), cyber * 0.38);
-      trimMarbleMat.emissive.setHex(0x16120c).lerp(new THREE.Color(0x0c141d), cyber);
-      trimMarbleMat.emissiveIntensity = THREE.MathUtils.lerp(0.07, 0.12, cyber);
-
-      domeMat.emissiveIntensity = THREE.MathUtils.lerp(0.22, 0.54, cyber);
-      goldMat.emissiveIntensity = THREE.MathUtils.lerp(0.32, 0.85, cyber);
-      winMat.emissiveIntensity = THREE.MathUtils.lerp(0.72, 1.12, cyber);
-
-      cyberTrimMesh.visible = cyber > 0.14;
-      cyberTrimMat.emissiveIntensity = cyber * 0.72;
-
-      holoDome.visible = cyber > 0.16;
-      holoDome.rotation.y = time * 0.16;
-      holoDomeMat.opacity = THREE.MathUtils.smoothstep(cyber, 0.16, 0.92) * 0.2;
-
-      facadeLightW.color.setHex(0xffd088).lerp(new THREE.Color(0xc8dce8), cyber * 0.32);
-      facadeLightE.color.setHex(0xffd088).lerp(new THREE.Color(0xc8dce8), cyber * 0.32);
-      facadeLightW.intensity = THREE.MathUtils.lerp(3.0, 4.5, cyber);
-      facadeLightE.intensity = THREE.MathUtils.lerp(3.0, 4.5, cyber);
-      domeLight.intensity = THREE.MathUtils.lerp(2.0, 4.0, cyber);
-    }
+    update() {}
   };
 }
 
@@ -1208,7 +1116,7 @@ export function buildPyramid(pbr) {
   const baseRadius = 33;
   const pyrH = 44;
 
-  const lowerMat = makeConcreteMat(pbr, { color: 0x7a8290, roughness: 0.68, metalness: 0.16, rx: 5, ry: 4 });
+  const lowerMat = makeConcreteMat(pbr, { color: 0x6c7484, roughness: 0.72, metalness: 0.14, rx: 5, ry: 4 });
   const lowerBody = new THREE.Mesh(new THREE.CylinderGeometry(9.2, baseRadius, 31.5, 4, 5), lowerMat);
   lowerBody.rotation.y = Math.PI / 4;
   lowerBody.position.y = 4.5 + 15.75;
@@ -1216,16 +1124,21 @@ export function buildPyramid(pbr) {
   lowerBody.receiveShadow = true;
   group.add(lowerBody);
 
-  const gridMat = new THREE.MeshBasicMaterial({
-    color: 0x7c8ea0,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.24
-  });
-  const lowerGrid = new THREE.Mesh(new THREE.CylinderGeometry(9.32, baseRadius + 0.16, 31.5, 4, 6), gridMat);
-  lowerGrid.rotation.y = Math.PI / 4;
-  lowerGrid.position.y = 4.5 + 15.75;
-  group.add(lowerGrid);
+  // Horizontal stepped architectural structural rib collars on lower pyramid (no crude wireframe!)
+  const ribStructMat = makeMetalMat(pbr, { color: 0x263140, roughness: 0.34, metalness: 0.88, env: 1.6 });
+  const ribCollars = [];
+  for (let tier = 1; tier <= 5; tier++) {
+    const f = tier / 6;
+    const r = THREE.MathUtils.lerp(baseRadius, 9.2, f) + 0.18;
+    const y = 4.5 + f * 31.5;
+    const pts = [];
+    for (let k = 0; k <= 4; k++) {
+      const a = ((k % 4) * Math.PI) / 2 + Math.PI / 4;
+      pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+    }
+    ribCollars.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 16, 0.16, 6, false));
+  }
+  group.add(new THREE.Mesh(mergeSafe(ribCollars), ribStructMat));
 
   const apexMat = new THREE.MeshPhysicalMaterial({
     color: 0xf0c975,
@@ -1276,14 +1189,9 @@ export function buildPyramid(pbr) {
 
   return {
     group,
-    update(time, cyber) {
-      apexMat.emissive.setHex(0xd49630).lerp(new THREE.Color(0xe6b43c), cyber);
-      apexMat.emissiveIntensity = THREE.MathUtils.lerp(0.55, 1.2 + Math.sin(time * 2.2) * 0.12, cyber);
-      ridgeMat.emissiveIntensity = THREE.MathUtils.lerp(0.15, 1.35, cyber);
-      gridMat.color.setHex(0x8898aa).lerp(new THREE.Color(0x42c4dc), cyber);
-      gridMat.opacity = THREE.MathUtils.lerp(0.16, 0.34, cyber);
-      beam.visible = cyber > 0.22;
-      beamMat.opacity = THREE.MathUtils.smoothstep(cyber, 0.22, 1.0) * 0.15;
+    update(time) {
+      apexMat.emissiveIntensity = 1.1 + Math.sin(time * 2.2) * 0.12;
+      beamMat.opacity = 0.14 + 0.03 * Math.sin(time * 2.2);
     }
   };
 }
@@ -1345,9 +1253,9 @@ export function buildSecondaryAstanaLandmarks(pbr) {
   group.add(emeraldGroup);
 
   // --- NORTHERN LIGHTS (Северное Сияние · X=-4, Z=-64) ---
-  // Cartoon pink rings REMOVED -> authentic brushed steel roof crowns & restrained cool ice-cyan architectural LEDs!
   const nlMat = createPBRSkyscraperMaterial(pbr, {
     isInstanced: false,
+    isCurved: true,
     tintHex: 0xa2b8d2,
     seed: 0.82,
     uvScaleX: 22,
@@ -1441,15 +1349,10 @@ export function buildSecondaryAstanaLandmarks(pbr) {
 
   return {
     group,
-    update(time, cyber) {
+    update(time) {
       for (const m of pbrTowerMats) {
         m.userData.customUniforms.uTime.value = time;
-        m.userData.customUniforms.uCyber.value = cyber;
-        m.emissiveIntensity = THREE.MathUtils.lerp(0.68, 1.32, cyber);
       }
-      emLedMat.emissiveIntensity = THREE.MathUtils.lerp(0.1, 1.25, cyber);
-      nlLedMat.emissiveIntensity = THREE.MathUtils.lerp(0.1, 1.15, cyber);
-      triSpireMat.emissiveIntensity = THREE.MathUtils.lerp(0.2, 1.05, cyber);
     }
   };
 }
@@ -1656,29 +1559,58 @@ export function buildUrbanBaseAndRiver(pbr) {
   group.add(buildGlazedTrussSkybridge(-62));
   group.add(buildGlazedTrussSkybridge(54));
 
-  // Boulevard Curved Streetlamps
+  // Arched Cyberpunk Boulevard Streetlamps + Downward Volumetric Rain-Light Cones
   const lampPosts = [];
   for (let lx = -92; lx <= 88; lx += 14) {
     if (Math.abs(lx) < 22) continue;
     lampPosts.push([lx, -9.8, 1], [lx, 9.8, -1]);
   }
-  const poleInst = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.1, 0.18, 6.8, 6), skybridgeFrameMat, lampPosts.length);
-  const armInst = new THREE.InstancedMesh(new THREE.BoxGeometry(0.14, 0.14, 1.8), skybridgeFrameMat, lampPosts.length);
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffd896 });
-  const bulbInst = new THREE.InstancedMesh(new THREE.BoxGeometry(0.32, 0.16, 0.9), bulbMat, lampPosts.length);
+  const archCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0, 0),
+    new THREE.Vector3(0, 5.4, 0),
+    new THREE.Vector3(0, 6.8, 0.45),
+    new THREE.Vector3(0, 6.9, 1.55)
+  ]);
+  const archPoleGeo = new THREE.TubeGeometry(archCurve, 12, 0.13, 6, false);
+  const archPoleInst = new THREE.InstancedMesh(archPoleGeo, skybridgeFrameMat, lampPosts.length);
+
+  const headGeo = new THREE.BoxGeometry(0.42, 0.18, 1.15);
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const bulbInst = new THREE.InstancedMesh(headGeo, bulbMat, lampPosts.length);
+
+  const coneGeo = new THREE.CylinderGeometry(0.24, 3.1, 6.75, 14, 1, true);
+  const lightConeMat = createLightConeMaterial({ opacity: 0.11, colorHex: 0xffa638 });
+  const coneInst = new THREE.InstancedMesh(coneGeo, lightConeMat, lampPosts.length);
+
   const dummy = new THREE.Object3D();
+  const lampColor = new THREE.Color();
   lampPosts.forEach(([x, z, dir], idx) => {
-    dummy.position.set(x, 3.4, z);
+    dummy.position.set(x, 0, z);
+    dummy.rotation.set(0, dir > 0 ? 0 : Math.PI, 0);
     dummy.updateMatrix();
-    poleInst.setMatrixAt(idx, dummy.matrix);
-    dummy.position.set(x, 6.8, z + dir * 0.7);
-    dummy.updateMatrix();
-    armInst.setMatrixAt(idx, dummy.matrix);
-    dummy.position.set(x, 6.68, z + dir * 1.15);
+    archPoleInst.setMatrixAt(idx, dummy.matrix);
+
+    dummy.position.set(x, 6.84, z + dir * 1.65);
+    dummy.rotation.set(0, 0, 0);
     dummy.updateMatrix();
     bulbInst.setMatrixAt(idx, dummy.matrix);
+
+    // Sodium-amber road lamps with cool-cyan accent near Baiterek plaza crossovers
+    const isNearCrossing = Math.abs(Math.abs(x) - 27) < 8;
+    lampColor.setHex(isNearCrossing ? 0x00e5ff : 0xff9e2c);
+    bulbInst.setColorAt(idx, lampColor);
+    coneInst.setColorAt(idx, lampColor);
+
+    dummy.position.set(x, 3.4, z + dir * 1.65);
+    dummy.updateMatrix();
+    coneInst.setMatrixAt(idx, dummy.matrix);
   });
-  group.add(poleInst, armInst, bulbInst);
+  archPoleInst.instanceMatrix.needsUpdate = true;
+  bulbInst.instanceMatrix.needsUpdate = true;
+  if (bulbInst.instanceColor) bulbInst.instanceColor.needsUpdate = true;
+  coneInst.instanceMatrix.needsUpdate = true;
+  if (coneInst.instanceColor) coneInst.instanceColor.needsUpdate = true;
+  group.add(archPoleInst, bulbInst, coneInst);
 
   // Elevated Monorail Viaduct + Streamlined Maglev Train
   const railCurve = new THREE.CatmullRomCurve3([
@@ -1742,27 +1674,10 @@ export function buildUrbanBaseAndRiver(pbr) {
   return {
     group,
     shaderMaterials: [roadMat, riverMat],
-    update(time, cyber) {
+    update(time) {
       roadMat.uniforms.uTime.value = time;
-      roadMat.uniforms.uCyber.value = cyber;
       riverMat.uniforms.uTime.value = time;
-      riverMat.uniforms.uCyber.value = cyber;
-
-      embNeonMat.emissiveIntensity = THREE.MathUtils.lerp(0.12, 1.15, cyber);
-      bridgeArchMat.emissive.setHex(0xd4a448).lerp(new THREE.Color(0x28c4e0), cyber);
-      bridgeArchMat.emissiveIntensity = THREE.MathUtils.lerp(0.18, 0.72, cyber);
-      poolMat.emissiveIntensity = THREE.MathUtils.lerp(0.18, 0.85, cyber);
-
-      skybridgeGlassMat.emissiveIntensity = THREE.MathUtils.lerp(0.1, 0.34, cyber);
-      skybridgeFloorGlowMat.emissive.setHex(0xd8a858).lerp(new THREE.Color(0x20b8d8), cyber);
-      skybridgeFloorGlowMat.emissiveIntensity = THREE.MathUtils.lerp(0.28, 0.88, cyber);
-      skybridgeCyanRailMat.emissive.setHex(0xd8a858).lerp(new THREE.Color(0x28d0e8), cyber);
-      skybridgeCyanRailMat.emissiveIntensity = THREE.MathUtils.lerp(0.1, 1.35, cyber);
-      skybridgeAmberRailMat.emissive.setHex(0xd8a858).lerp(new THREE.Color(0xe8a828), cyber);
-      skybridgeAmberRailMat.emissiveIntensity = THREE.MathUtils.lerp(0.1, 1.25, cyber);
-
-      bulbMat.color.setHex(0xffd485).lerp(new THREE.Color(0xffe0a0), cyber);
-      railGlowMat.color.setHex(0x64748b).lerp(new THREE.Color(0x38d8f0), cyber);
+      lightConeMat.uniforms.uTime.value = time;
 
       const u = (time * 0.055) % 1;
       railCurve.getPointAt(u, tmpPos);
