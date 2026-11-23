@@ -1,21 +1,24 @@
 /**
  * Astana -> Night City 2077
- * Main Three.js WebGL Engine:
- * - EffectComposer + UnrealBloomPass + OutputPass (ACESFilmic Tone Mapping)
+ * Pass 3: Photorealistic Cinematic PBR + 32-Bit HDRI WebGL Engine
+ * - Real 32-bit HDRI Environment (RGBELoader + PMREMGenerator) + Procedural Instant Fallback
+ * - Photorealistic Roger Deakins Storm Sky Dome (nightcity_sky_pano.jpg)
+ * - EffectComposer + RenderPass + UnrealBloomPass + CinemaGradeShaderPass + OutputPass
  * - Real-time Astana Reality (0.0) <-> Night City 2077 (1.0) Morphing Engine
- * - 3 Camera Modes: ORBIT, AUTO-TOUR (Cinematic Flyover), DRONE (WASD + Mouse Look)
- * - Smooth Landmark Fly-To & Atmosphere Preset Blending
+ * - 3 Camera Modes: ORBIT, AUTO-TOUR, DRONE (WASD + Mouse Look)
  */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 import { LANDMARKS, ATMOSPHERE_PRESETS } from '../data/landmarks.js';
-import { createSkyMaterial } from './shaders.js';
+import { createSkyMaterial, CinemaGradeShader } from './shaders.js';
 import { createNeonEnvironmentMap } from './textures.js';
+import { loadPBRAssets } from './pbrAssets.js';
 import {
   buildBaiterek,
   buildKhanShatyr,
@@ -48,6 +51,8 @@ export class AstanaNightCityEngine {
     this.frameCount = 0;
     this.fpsAccum = 0;
     this.statsTimer = 0;
+    this.assetsReady = false;
+    this.hdrLoaded = false;
 
     // Live morph state (boots from Astana Dusk -> 100% Night City 2077 over 1.85s)
     this.cyberLevel = 0.08;
@@ -56,7 +61,7 @@ export class AstanaNightCityEngine {
     this.activeCyberPreset = ATMOSPHERE_PRESETS.neon_rain;
 
     // Camera state
-    this.cameraMode = 'orbit'; // 'orbit' | 'tour' | 'drone'
+    this.cameraMode = 'orbit';
     this.flyAnim = null;
     this.tourAngle = 0;
     this.keys = Object.create(null);
@@ -77,6 +82,7 @@ export class AstanaNightCityEngine {
     this.updatables = [];
 
     this.initRenderer();
+    this.initAssets();
     this.initScene();
     this.initLights();
     this.initWorld();
@@ -84,13 +90,11 @@ export class AstanaNightCityEngine {
     this.initControls();
     this.initEvents();
 
-    // Start on establishing skyline shot capturing all 6 iconic Astana landmarks
     const overview = LANDMARKS[0];
     this.camera.position.set(...overview.camPos);
     this.controls.target.set(...overview.target);
     this.controls.update();
 
-    // Trigger dramatic opening shift: Astana Twilight -> 100% Night City 2077
     const params = new URLSearchParams(window.location.search);
     if (params.get('instant') === '1') {
       this.setCyberLevel(1.0, false);
@@ -113,39 +117,53 @@ export class AstanaNightCityEngine {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.setSize(w, h, false);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.12;
+    this.renderer.toneMappingExposure = 1.02;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.shadowMap.needsUpdate = true;
   }
 
+  initAssets() {
+    // Instant procedural PMREM fallback while the real 32-bit 2K HDRI streams in
+    this.fallbackEnvTexture = createNeonEnvironmentMap(this.renderer);
+
+    this.pbr = loadPBRAssets(this.renderer, (hdrEnvMap) => {
+      this.hdrLoaded = true;
+      if (this.scene) {
+        this.scene.environment = hdrEnvMap;
+      }
+    });
+
+    this.assetsReadyPromise = this.pbr.readyPromise.then(() => {
+      this.assetsReady = true;
+    });
+  }
+
   initScene() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x090716);
-    this.scene.fog = new THREE.FogExp2(0x120a24, 0.0021);
+    this.scene.background = new THREE.Color(0x050810);
+    this.scene.fog = new THREE.FogExp2(0x060a12, 0.00155);
 
-    // Procedural Night City neon cubemap reflection environment
-    this.envTexture = createNeonEnvironmentMap(this.renderer);
-    this.scene.environment = this.envTexture;
-    this.scene.environmentIntensity = 0.52;
+    this.scene.environment = this.pbr.envMap || this.fallbackEnvTexture;
+    this.scene.environmentIntensity = 1.25;
 
     this.camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.8, 1600);
 
-    // Custom GLSL Sky Dome
-    this.skyMat = createSkyMaterial();
-    this.skyDome = new THREE.Mesh(new THREE.SphereGeometry(950, 32, 20), this.skyMat);
+    // Photorealistic Storm Sky Dome sampling nightcity_sky_pano.jpg
+    this.skyMat = createSkyMaterial(this.pbr.skyPano);
+    this.skyDome = new THREE.Mesh(new THREE.SphereGeometry(950, 40, 24), this.skyMat);
     this.skyDome.frustumCulled = false;
     this.scene.add(this.skyDome);
   }
 
   initLights() {
-    // Hemisphere sky-ground fill
-    this.hemiLight = new THREE.HemisphereLight(0x4b78c8, 0x160a26, 0.85);
+    // Cool nocturnal atmospheric hemisphere fill (zero pink wash!)
+    this.hemiLight = new THREE.HemisphereLight(0x6d8eb2, 0x101622, 0.55);
     this.scene.add(this.hemiLight);
 
-    // Primary Sun / Cyber Moon directional key light (static shadows baked once for 60fps!)
-    this.sunLight = new THREE.DirectionalLight(0x88c8ff, 1.85);
+    // Primary Sun (Dusk) / Cool Moonlight (Night City) directional key
+    this.sunLight = new THREE.DirectionalLight(0x8bb6d8, 1.05);
     this.sunLight.position.set(160, 210, 120);
     this.sunLight.castShadow = true;
     this.sunLight.shadow.mapSize.set(2048, 2048);
@@ -159,44 +177,43 @@ export class AstanaNightCityEngine {
     this.sunLight.shadow.bias = -0.0006;
     this.scene.add(this.sunLight);
 
-    // Opposite Night City hot magenta-crimson neon rim light
-    this.rimLight = new THREE.DirectionalLight(0xff1675, 1.45);
+    // Subtle cool cyan/teal architectural silhouette rim (replaces loud magenta wash)
+    this.rimLight = new THREE.DirectionalLight(0x4aa8c8, 0.55);
     this.rimLight.position.set(-180, 95, -130);
     this.scene.add(this.rimLight);
 
-    // Subtle cool cyan fill light from East / Esil River side
-    this.cyanFill = new THREE.DirectionalLight(0x00f0ff, 0.95);
-    this.cyanFill.position.set(160, 75, -120);
-    this.scene.add(this.cyanFill);
+    // Warm distant amber urban bounce from western skyline
+    this.amberFill = new THREE.DirectionalLight(0xd89b52, 0.42);
+    this.amberFill.position.set(150, 60, -120);
+    this.scene.add(this.amberFill);
   }
 
   initWorld() {
-    // 1. Cohesive Urban Base: Wet Nurzhol Boulevard, Esil River, Arched Bridges & Cyber-Monorail
-    const urban = buildUrbanBaseAndRiver();
+    // 1. Cohesive Urban Base: Photoscanned Wet Asphalt Nurzhol Boulevard, Mirror Esil River, Bridges & Monorail
+    const urban = buildUrbanBaseAndRiver(this.pbr);
     this.scene.add(urban.group);
     this.shaderFogMaterials.push(...urban.shaderMaterials);
     this.updatables.push(urban);
 
-    // 2. All Iconic Recognizable Astana Architectural Landmarks
-    const baiterek = buildBaiterek();
-    const khanShatyr = buildKhanShatyr();
-    const abuDhabi = buildAbuDhabiPlaza();
-    const nurAlem = buildNurAlem();
-    const akOrda = buildAkOrda();
-    const pyramid = buildPyramid();
-    const secondary = buildSecondaryAstanaLandmarks();
-
-    const landmarkModules = [baiterek, khanShatyr, abuDhabi, nurAlem, akOrda, pyramid, secondary];
+    // 2. All Iconic Recognizable Astana Architectural Landmarks with Real PBR Textures
+    const landmarkModules = [
+      buildBaiterek(this.pbr),
+      buildKhanShatyr(this.pbr),
+      buildAbuDhabiPlaza(this.pbr),
+      buildNurAlem(this.pbr),
+      buildAkOrda(this.pbr),
+      buildPyramid(this.pbr),
+      buildSecondaryAstanaLandmarks(this.pbr)
+    ];
     for (const mod of landmarkModules) {
       this.scene.add(mod.group);
       if (mod.shaderMaterials) this.shaderFogMaterials.push(...mod.shaderMaterials);
       this.updatables.push(mod);
     }
 
-    // 3. Procedural Night City Megacity Filler Blocks (InstancedMesh)
-    this.megacity = buildMegacityBlocks();
+    // 3. Instanced PBR Megacity Skyline Filler Blocks
+    this.megacity = buildMegacityBlocks(this.pbr);
     this.scene.add(this.megacity.group);
-    this.shaderFogMaterials.push(...this.megacity.shaderMaterials);
     this.updatables.push(this.megacity);
 
     // 4. Giant Animated Holographic Mega-Billboards
@@ -208,15 +225,14 @@ export class AstanaNightCityEngine {
     this.traffic = buildFlyingTraffic();
     this.scene.add(this.traffic.group);
 
-    // 6. Sweeping Volumetric Searchlights
+    // 6. Volumetric Searchlights
     this.searchlights = buildSearchlights();
     this.scene.add(this.searchlights.group);
 
-    // 7. GPU-Driven Pouring Neon Rain
+    // 7. GPU-Driven Rain Streaks
     this.rain = buildNeonRain();
     this.scene.add(this.rain.mesh);
 
-    // Trigger one-shot shadow bake for all static landmarks
     this.renderer.shadowMap.needsUpdate = true;
   }
 
@@ -230,8 +246,13 @@ export class AstanaNightCityEngine {
     this.renderPass = new RenderPass(this.scene, this.camera);
     this.composer.addPass(this.renderPass);
 
-    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.46, 0.42, 0.92);
+    // Delicate anamorphic bloom (threshold 0.96, strength 0.34) — only true bright lights glow!
+    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(w, h), 0.34, 0.42, 0.96);
     this.composer.addPass(this.bloomPass);
+
+    // Cinematic Roger Deakins Film Grade Pass (Teal-Obsidian Shadows, Amber Highlights, Vignette, Grain, Edge CA)
+    this.cinemaPass = new ShaderPass(CinemaGradeShader);
+    this.composer.addPass(this.cinemaPass);
 
     this.outputPass = new OutputPass();
     this.composer.addPass(this.outputPass);
@@ -252,7 +273,6 @@ export class AstanaNightCityEngine {
   initEvents() {
     window.addEventListener('resize', () => this.onResize());
 
-    // Cancel camera fly-to if user actively grabs viewport
     this.canvas.addEventListener('pointerdown', (e) => {
       this.flyAnim = null;
       if (this.cameraMode === 'drone') {
@@ -377,7 +397,6 @@ export class AstanaNightCityEngine {
       this.controls.enabled = false;
       this.tourAngle = Math.atan2(this.camera.position.z, this.camera.position.x);
     } else {
-      // Orbit mode: set target straight ahead of camera so transition is seamless
       this.controls.enabled = true;
       this.camera.getWorldDirection(this._vecFwd);
       this.controls.target.copy(this.camera.position).addScaledVector(this._vecFwd, 70);
@@ -392,30 +411,19 @@ export class AstanaNightCityEngine {
   applyAtmosphere(cyber) {
     const p = this.activeCyberPreset;
 
-    // Interpolate Sky Dome colors smoothly between Astana Dusk (cyber=0) & Night City Preset (cyber=1)
+    // Sky Dome crossfade (Golden Astana Dusk <-> Photorealistic Roger Deakins Storm Pano)
     this.skyMat.uniforms.uTime.value = this.time;
     this.skyMat.uniforms.uCyber.value = cyber;
-    this.skyMat.uniforms.uTopColor.value
-      .setHex(DUSK_BASE.skyTop)
-      .lerp(this._colA.setHex(p.skyTop), cyber);
-    this.skyMat.uniforms.uMidColor.value
-      .setHex(DUSK_BASE.skyMid)
-      .lerp(this._colA.setHex(p.skyMid), cyber);
-    this.skyMat.uniforms.uHorizonColor.value
-      .setHex(DUSK_BASE.skyHorizon)
-      .lerp(this._colA.setHex(p.skyHorizon), cyber);
-    this.skyMat.uniforms.uAccentColor.value
-      .setHex(DUSK_BASE.skyGlowAccent)
-      .lerp(this._colA.setHex(p.skyGlowAccent), cyber);
+    this.skyMat.uniforms.uSkyTint.value.setHex(p.skyTint || 0xdbe6f2);
 
-    // Subtle EMP lightning flash surge when EMP Overdrive preset is active
+    // Subtle lightning surge in EMP Overdrive
     let empFlash = 0;
     if (this.activePresetKey === 'emp_overdrive' && cyber > 0.7) {
       const pulse = Math.pow(Math.max(0, Math.sin(this.time * 0.9) * Math.sin(this.time * 7.3)), 14.0);
-      empFlash = pulse * 0.45;
+      empFlash = pulse * 0.4;
     }
 
-    // Scene Fog & Custom Shader Fog Synchronization
+    // Deep restrained slate-obsidian atmospheric fog (zero cartoon pink haze!)
     this._colA.setHex(DUSK_BASE.fogColor).lerp(this._colB.setHex(p.fogColor), cyber);
     const fogDensity = THREE.MathUtils.lerp(DUSK_BASE.fogDensity, p.fogDensity, cyber);
     this.scene.fog.color.copy(this._colA);
@@ -427,25 +435,27 @@ export class AstanaNightCityEngine {
       if (m.uniforms.uFogDensity) m.uniforms.uFogDensity.value = fogDensity;
     }
 
-    // Lights morphing — deep moody obsidian Night City contrast vs warm sunlit Astana Dusk
+    // Photorealistic lighting + 32-bit HDRI environment reflection intensity (calibrated for real HDR dynamic range)
     this.sunLight.color.setHex(DUSK_BASE.sunColor).lerp(this._colB.setHex(p.sunColor), cyber);
-    this.sunLight.intensity = THREE.MathUtils.lerp(1.55, 0.58 + empFlash * 1.4, cyber);
+    this.sunLight.intensity = THREE.MathUtils.lerp(1.55, 0.62 + empFlash * 1.2, cyber);
     this.rimLight.color.setHex(DUSK_BASE.rimColor).lerp(this._colB.setHex(p.rimColor), cyber);
-    this.rimLight.intensity = THREE.MathUtils.lerp(0.45, 0.62 + empFlash * 0.85, cyber);
-    this.cyanFill.intensity = THREE.MathUtils.lerp(0.25, 0.58, cyber);
-    this.hemiLight.intensity = THREE.MathUtils.lerp(0.75, 0.34, cyber);
-    this.scene.environmentIntensity = THREE.MathUtils.lerp(0.68, 0.42, cyber);
+    this.rimLight.intensity = THREE.MathUtils.lerp(0.4, 0.48 + empFlash * 0.7, cyber);
+    this.amberFill.intensity = THREE.MathUtils.lerp(0.28, 0.34, cyber);
+    this.hemiLight.intensity = THREE.MathUtils.lerp(0.75, 0.38, cyber);
+    this.scene.environmentIntensity = THREE.MathUtils.lerp(0.68, 0.85, cyber);
 
-    // Post-processing Bloom & Exposure (selective neon glow — zero whiteout!)
-    this.bloomPass.strength = THREE.MathUtils.lerp(DUSK_BASE.bloomStrength, p.bloomStrength, cyber) + empFlash * 0.25;
+    // Delicate anamorphic bloom + cinematic film grade uniforms
+    this.bloomPass.strength = THREE.MathUtils.lerp(DUSK_BASE.bloomStrength, p.bloomStrength, cyber) + empFlash * 0.2;
     this.bloomPass.threshold = THREE.MathUtils.lerp(DUSK_BASE.bloomThreshold, p.bloomThreshold, cyber);
     this.renderer.toneMappingExposure = THREE.MathUtils.lerp(DUSK_BASE.exposure, p.exposure, cyber);
+
+    this.cinemaPass.uniforms.uTime.value = this.time;
+    this.cinemaPass.uniforms.uCyber.value = cyber;
   }
 
   updateCamera(dt, now) {
     if (this.flyAnim) {
       const t = Math.min((now - this.flyAnim.startTime) / this.flyAnim.duration, 1);
-      // Smooth quintic ease-in-out
       const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       this.camera.position.lerpVectors(this.flyAnim.startPos, this.flyAnim.endPos, ease);
       this.controls.target.lerpVectors(this.flyAnim.startTarget, this.flyAnim.endTarget, ease);
@@ -457,12 +467,9 @@ export class AstanaNightCityEngine {
     if (this.cameraMode === 'orbit') {
       this.controls.update();
     } else if (this.cameraMode === 'tour') {
-      // Sweeping cinema aerial flyover showcasing the full Astana Night City axis
       this.tourAngle += dt * 0.11;
-      const rx = 185;
-      const rz = 128;
-      const cx = 18 + Math.cos(this.tourAngle) * rx;
-      const cz = Math.sin(this.tourAngle) * rz;
+      const cx = 18 + Math.cos(this.tourAngle) * 185;
+      const cz = Math.sin(this.tourAngle) * 128;
       const cy = 50 + Math.sin(this.tourAngle * 2.0) * 18;
       this.camera.position.set(cx, cy, cz);
       this.camera.lookAt(12 + Math.sin(this.tourAngle) * 28, 26, -4);
@@ -494,7 +501,6 @@ export class AstanaNightCityEngine {
     this.lastFrameTime = now;
     this.time += dt;
 
-    // Advance animated Astana <-> Night City morph
     if (this.morphAnim) {
       const p = Math.min((now - this.morphAnim.startTime) / this.morphAnim.duration, 1);
       const ease = p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
@@ -509,7 +515,6 @@ export class AstanaNightCityEngine {
     this.applyAtmosphere(cyber);
     this.updateCamera(dt, now);
 
-    // Update all landmarks & urban systems
     for (let i = 0; i < this.updatables.length; i++) {
       this.updatables[i].update(this.time, cyber);
     }
@@ -520,13 +525,11 @@ export class AstanaNightCityEngine {
       cyber,
       preset.rainIntensity,
       preset.skyGlowAccent,
-      preset.skyHorizon
+      0xdca25c
     );
 
-    // Render full HDR bloom composite
     this.composer.render();
 
-    // Update throttled HUD telemetry
     this.frameCount++;
     this.fpsAccum += dt;
     this.statsTimer += dt;

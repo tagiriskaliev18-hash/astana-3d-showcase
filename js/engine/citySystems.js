@@ -9,7 +9,7 @@
  */
 import * as THREE from 'three';
 import {
-  createBuildingWindowMaterial,
+  createPBRSkyscraperMaterial,
   createHoloBillboardMaterial,
   createSearchlightMaterial,
   createNeonRainMaterial
@@ -55,7 +55,7 @@ function isExcluded(x, z) {
 /* ============================================================================
    1. PROCEDURAL MEGACITY FILLER BLOCKS (InstancedMesh + GLSL Window Matrix)
    ============================================================================ */
-export function buildMegacityBlocks() {
+export function buildMegacityBlocks(pbr) {
   const group = new THREE.Group();
   group.name = 'City_Megablocks';
   const rng = createRng(20771997);
@@ -139,11 +139,19 @@ export function buildMegacityBlocks() {
   }
   boxGeo.setAttribute('aBuildingData', new THREE.InstancedBufferAttribute(dataArray, 4));
 
-  const buildingMat = createBuildingWindowMaterial({ isInstanced: true, baseTint: 0x070c16 });
+  const buildingMat = createPBRSkyscraperMaterial(pbr, {
+    isInstanced: true,
+    tintHex: 0xbfd0e2,
+    uvScaleX: 24,
+    uvScaleY: 54
+  });
   const buildingsInst = new THREE.InstancedMesh(boxGeo, buildingMat, count);
   buildingsInst.castShadow = false;
   buildingsInst.receiveShadow = true;
 
+  // Per-instance dark glass architectural tint variation (charcoal, cool blue-steel, bronze-slate!)
+  const instTint = new THREE.Color();
+  const paletteHex = [0x9eb4cc, 0x8ea8b8, 0xb8c4d4, 0x7c96a8, 0xbcb0a0, 0x8aa2be];
   const dummy = new THREE.Object3D();
   const roofTowers = [];
   const tallAntennas = [];
@@ -156,24 +164,37 @@ export function buildMegacityBlocks() {
     dummy.updateMatrix();
     buildingsInst.setMatrixAt(i, dummy.matrix);
 
+    const hex = paletteHex[Math.floor(p.seed * paletteHex.length) % paletteHex.length];
+    instTint.setHex(hex);
+    buildingsInst.setColorAt(i, instTint);
+
     if (!p.isSetback) {
       roofTowers.push(p);
       if (p.topY > 46) tallAntennas.push(p);
     }
   }
   buildingsInst.instanceMatrix.needsUpdate = true;
+  if (buildingsInst.instanceColor) buildingsInst.instanceColor.needsUpdate = true;
   group.add(buildingsInst);
 
-  // Rooftop HVAC mechanical penthouses / cooling units on skyline towers (1 InstancedMesh)
-  const mechMat = new THREE.MeshStandardMaterial({ color: 0x101724, metalness: 0.72, roughness: 0.42 });
+  // Rooftop HVAC mechanical penthouses / cooling units with real photoscanned metal PBR
+  const mechMat = new THREE.MeshStandardMaterial({
+    color: 0x3b4454,
+    map: pbr.metal.albedo,
+    normalMap: pbr.metal.normal,
+    roughnessMap: pbr.metal.rough,
+    metalness: 0.78,
+    roughness: 0.52,
+    envMapIntensity: 1.3
+  });
   const hvacInst = new THREE.InstancedMesh(
     new THREE.BoxGeometry(1, 1, 1),
     mechMat,
     roofTowers.length
   );
   roofTowers.forEach((p, idx) => {
-    const hw = p.w * (0.28 + (p.seed * 0.16));
-    const hd = p.d * (0.28 + ((1 - p.seed) * 0.16));
+    const hw = p.w * (0.28 + p.seed * 0.16);
+    const hd = p.d * (0.28 + (1 - p.seed) * 0.16);
     const hh = 1.6 + p.seed * 2.2;
     dummy.position.set(p.x + (p.seed - 0.5) * 1.4, p.topY + hh * 0.5, p.z);
     dummy.scale.set(hw, hh, hd);
@@ -183,8 +204,8 @@ export function buildMegacityBlocks() {
   group.add(hvacInst);
 
   // Rooftop spires / communication antennae & red aviation beacons on tall megablocks
-  const antMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.85, roughness: 0.28 });
-  const beaconMat = new THREE.MeshBasicMaterial({ color: 0xff003c });
+  const antMat = new THREE.MeshStandardMaterial({ color: 0x5c6b7c, metalness: 0.86, roughness: 0.28 });
+  const beaconMat = new THREE.MeshBasicMaterial({ color: 0xe61c34 });
   const antInst = new THREE.InstancedMesh(
     new THREE.CylinderGeometry(0.08, 0.22, 12, 5),
     antMat,
@@ -213,13 +234,13 @@ export function buildMegacityBlocks() {
 
   return {
     group,
-    shaderMaterials: [buildingMat],
     count,
     update(time, cyber) {
-      buildingMat.uniforms.uTime.value = time;
-      buildingMat.uniforms.uCyber.value = cyber;
+      buildingMat.userData.customUniforms.uTime.value = time;
+      buildingMat.userData.customUniforms.uCyber.value = cyber;
+      buildingMat.emissiveIntensity = THREE.MathUtils.lerp(0.62, 1.38, cyber);
       const blink = 0.45 + 0.55 * (Math.sin(time * 3.8) > 0 ? 1 : 0.2);
-      beaconMat.color.setRGB(1.4 * blink, 0.04 * blink, 0.24 * blink);
+      beaconMat.color.setRGB(1.25 * blink, 0.08 * blink, 0.16 * blink);
     }
   };
 }
@@ -447,16 +468,16 @@ export function buildSearchlights() {
   coneGeo.translate(0, 105, 0);
 
   const configs = [
-    { pos: [-52, 10, -58], color: 0x00f0ff, rx: 0.22, rz: -0.18, speed: 0.32, phase: 0.0 },
-    { pos: [-38, 10, -58], color: 0xfcee0a, rx: -0.18, rz: 0.24, speed: 0.26, phase: 1.4 },
-    { pos: [0, 3, -24], color: 0x00f0ff, rx: 0.26, rz: 0.14, speed: 0.29, phase: 2.1 },
-    { pos: [0, 3, 24], color: 0xff005c, rx: -0.24, rz: -0.18, speed: 0.34, phase: 0.7 },
-    { pos: [-116, 8, -22], color: 0xff005c, rx: 0.18, rz: 0.28, speed: 0.25, phase: 3.3 },
-    { pos: [-34, 6, 78], color: 0x00ffb3, rx: -0.25, rz: 0.15, speed: 0.31, phase: 4.0 },
-    { pos: [108, 6, -26], color: 0x00f0ff, rx: 0.2, rz: -0.24, speed: 0.28, phase: 1.9 },
-    { pos: [108, 6, 26], color: 0xfcee0a, rx: -0.22, rz: -0.2, speed: 0.24, phase: 5.1 },
-    { pos: [188, 6, -24], color: 0xfcee0a, rx: 0.18, rz: -0.26, speed: 0.22, phase: 2.8 },
-    { pos: [44, 12, -48], color: 0x00ffb3, rx: 0.24, rz: 0.22, speed: 0.3, phase: 3.9 }
+    { pos: [-52, 10, -58], color: 0x6cd8ee, rx: 0.22, rz: -0.18, speed: 0.28, phase: 0.0 },
+    { pos: [-38, 10, -58], color: 0xe6b45a, rx: -0.18, rz: 0.24, speed: 0.24, phase: 1.4 },
+    { pos: [0, 3, -24], color: 0x6cd8ee, rx: 0.26, rz: 0.14, speed: 0.26, phase: 2.1 },
+    { pos: [0, 3, 24], color: 0xd8a254, rx: -0.24, rz: -0.18, speed: 0.30, phase: 0.7 },
+    { pos: [-116, 8, -22], color: 0x5cc4de, rx: 0.18, rz: 0.28, speed: 0.22, phase: 3.3 },
+    { pos: [-46, 6, 88], color: 0x52d4c2, rx: -0.25, rz: 0.15, speed: 0.28, phase: 4.0 },
+    { pos: [108, 6, -26], color: 0x72d4ee, rx: 0.2, rz: -0.24, speed: 0.26, phase: 1.9 },
+    { pos: [108, 6, 26], color: 0xe6ba62, rx: -0.22, rz: -0.2, speed: 0.22, phase: 5.1 },
+    { pos: [188, 6, -24], color: 0xe6ba62, rx: 0.18, rz: -0.26, speed: 0.2, phase: 2.8 },
+    { pos: [44, 12, -48], color: 0x52d4c2, rx: 0.24, rz: 0.22, speed: 0.27, phase: 3.9 }
   ];
 
   const beams = configs.map((c) => {

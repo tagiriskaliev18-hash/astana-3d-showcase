@@ -1,0 +1,38 @@
+{
+  "asphalt": {
+    "id": "aerial_asphalt_01",
+    "maps": {
+      "albedo": "asphalt_albedo.jpg",
+      "normal": "asphalt_normal.jpg",
+      "rough": "asphalt_rough.jpg"
+    }
+  },
+  "concrete": {
+    "id": "beige_wall_001",
+    "maps": {
+      "albedo": "concrete_albedo.jpg",
+      "normal": "concrete_normal.jpg",
+      "rough": "concrete_rough.jpg"
+    }
+  },
+  "marble": {
+    "id": "floor_tiles_02",
+    "maps": {
+      "albedo": "marble_albedo.jpg",
+      "normal": "marble_normal.jpg",
+      "rough": "marble_rough.jpg"
+    }
+  },
+  "metal": {
+    "id": "blue_metal_plate",
+    "maps": {
+      "albedo": "metal_albedo.jpg",
+      "normal": "metal_normal.jpg",
+      "rough": "metal_rough.jpg"
+    }
+  },
+  "hdri": {
+    "id": "blue_lagoon_night",
+    "file": "nightcity_env.hdr"
+  }
+}
