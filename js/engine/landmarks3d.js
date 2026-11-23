@@ -445,13 +445,13 @@ export function buildAbuDhabiPlaza() {
   // Shared procedural skyscraper window shader materials for the stepped megatowers
   const mainMat = createBuildingWindowMaterial({
     isInstanced: false,
-    baseTint: 0x18253d,
+    baseTint: 0x0a1528,
     seed: 0.14,
     accentIndex: 0.12
   });
   const wingMat = createBuildingWindowMaterial({
     isInstanced: false,
-    baseTint: 0x141f34,
+    baseTint: 0x081122,
     seed: 0.61,
     accentIndex: 0.78
   });
@@ -576,73 +576,179 @@ export function buildAbuDhabiPlaza() {
 }
 
 /* ============================================================================
-   4. NUR ALEM / EXPO SPHERE (Южная ось · X=-34, Z=56)
+   4. NUR ALEM / EXPO SPHERE (Южная ось · X=-46, Z=72)
+      Crisp Terraced Dark-Stone & Glass EXPO Plaza + Hollow Curved Glass Crescent Wings
    ============================================================================ */
 export function buildNurAlem() {
   const group = new THREE.Group();
   group.name = 'Landmark_NurAlem';
   group.position.set(-46, 0, 72);
 
-  // Circular EXPO concourse plaza + twin curved pavilion crescent wings
-  const concourseMat = new THREE.MeshStandardMaterial({
-    color: 0x20293d,
-    roughness: 0.35,
-    metalness: 0.65
+  const stoneMat = new THREE.MeshStandardMaterial({
+    color: 0x161c28,
+    roughness: 0.42,
+    metalness: 0.48
   });
-  const basePlinth = new THREE.Mesh(new THREE.CylinderGeometry(28, 30, 3.6, 36), concourseMat);
-  basePlinth.position.y = 1.8;
-  basePlinth.receiveShadow = true;
-  group.add(basePlinth);
-
-  // Flanking EXPO crescent wings (two iconic sweeping curved halls)
-  const wingGeo1 = new THREE.CylinderGeometry(37, 37, 8, 28, 1, false, -0.7, 1.4);
-  const wingMesh1 = new THREE.Mesh(wingGeo1, concourseMat);
-  wingMesh1.position.y = 4;
-  group.add(wingMesh1);
-
-  const wingGeo2 = new THREE.CylinderGeometry(37, 37, 8, 28, 1, false, Math.PI - 0.7, 1.4);
-  const wingMesh2 = new THREE.Mesh(wingGeo2, concourseMat);
-  wingMesh2.position.y = 4;
-  group.add(wingMesh2);
-
-  // Inner multi-level glowing exhibition decks + quantum reactor core
-  const innerCoreMat = new THREE.MeshStandardMaterial({
-    color: 0x00f0ff,
+  const brushedSteelMat = new THREE.MeshStandardMaterial({
+    color: 0x475569,
+    roughness: 0.28,
+    metalness: 0.85
+  });
+  const plazaRingGlowMat = new THREE.MeshStandardMaterial({
+    color: 0x00e5ff,
     emissive: 0x00e5ff,
-    emissiveIntensity: 2.2,
+    emissiveIntensity: 1.4,
+    roughness: 0.2
+  });
+
+  // 3-Tier Concentric Terraced Circular EXPO Plaza Podium (clean stepped stone + slim ring trims!)
+  const tier1 = new THREE.Mesh(new THREE.CylinderGeometry(31.5, 32.8, 1.0, 48), stoneMat);
+  tier1.position.y = 0.5;
+  tier1.receiveShadow = true;
+  group.add(tier1);
+
+  const tier2 = new THREE.Mesh(new THREE.CylinderGeometry(25.5, 26.5, 1.1, 48), stoneMat);
+  tier2.position.y = 1.55;
+  tier2.receiveShadow = true;
+  group.add(tier2);
+
+  // Recessed central glass-and-steel atrium cradle lifting the 22-unit sphere cleanly
+  const atriumPedestal = new THREE.Mesh(new THREE.CylinderGeometry(14.5, 16.2, 3.2, 36), brushedSteelMat);
+  atriumPedestal.position.y = 3.2;
+  group.add(atriumPedestal);
+
+  // Slim glowing architectural ring trims along podium step edges (NO giant solid cyan disc!)
+  const ringTrim1 = new THREE.Mesh(new THREE.TorusGeometry(31.6, 0.16, 8, 64), plazaRingGlowMat);
+  ringTrim1.rotation.x = Math.PI / 2;
+  ringTrim1.position.y = 1.05;
+  group.add(ringTrim1);
+
+  const ringTrim2 = new THREE.Mesh(new THREE.TorusGeometry(25.6, 0.16, 8, 64), plazaRingGlowMat);
+  ringTrim2.rotation.x = Math.PI / 2;
+  ringTrim2.position.y = 2.15;
+  group.add(ringTrim2);
+
+  // TRUE HOLLOW CURVED GLASS EXPO CRESCENT PAVILION WINGS (Extruded Annular Arcs + Mullions!)
+  const wingGlassMat = new THREE.MeshStandardMaterial({
+    color: 0x162942,
+    emissive: 0x0d3654,
+    emissiveIntensity: 0.45,
+    metalness: 0.85,
+    roughness: 0.14
+  });
+  const wingMullionGeos = [];
+
+  function buildCrescentPavilion(startAngle, endAngle) {
+    const innerR = 31.2;
+    const outerR = 37.6;
+    const wingH = 7.4;
+
+    const shape = new THREE.Shape();
+    shape.absarc(0, 0, outerR, startAngle, endAngle, false);
+    shape.absarc(0, 0, innerR, endAngle, startAngle, true);
+    shape.closePath();
+
+    const bodyGeo = new THREE.ExtrudeGeometry(shape, {
+      depth: wingH,
+      bevelEnabled: false,
+      curveSegments: 28
+    });
+    bodyGeo.rotateX(-Math.PI / 2);
+    const bodyMesh = new THREE.Mesh(bodyGeo, wingGlassMat);
+    bodyMesh.position.y = 0.2;
+    bodyMesh.castShadow = true;
+    bodyMesh.receiveShadow = true;
+    group.add(bodyMesh);
+
+    // Sleek dark-metal overhanging roof fascia slab
+    const roofShape = new THREE.Shape();
+    roofShape.absarc(0, 0, outerR + 0.6, startAngle - 0.02, endAngle + 0.02, false);
+    roofShape.absarc(0, 0, innerR - 0.6, endAngle + 0.02, startAngle - 0.02, true);
+    roofShape.closePath();
+    const roofGeo = new THREE.ExtrudeGeometry(roofShape, {
+      depth: 0.85,
+      bevelEnabled: false,
+      curveSegments: 28
+    });
+    roofGeo.rotateX(-Math.PI / 2);
+    const roofMesh = new THREE.Mesh(roofGeo, stoneMat);
+    roofMesh.position.y = wingH + 0.2;
+    group.add(roofMesh);
+
+    // Rhythmic vertical architectural facade mullions along both inner & outer curved walls
+    const steps = 12;
+    for (let i = 0; i <= steps; i++) {
+      const a = THREE.MathUtils.lerp(startAngle, endAngle, i / steps);
+      for (const r of [innerR - 0.08, outerR + 0.08]) {
+        const col = new THREE.BoxGeometry(0.28, wingH + 0.3, 0.28);
+        col.rotateY(-a);
+        col.translate(Math.cos(a) * r, wingH * 0.5 + 0.2, -Math.sin(a) * r);
+        wingMullionGeos.push(col);
+      }
+    }
+  }
+
+  buildCrescentPavilion(-0.62, 0.62);
+  buildCrescentPavilion(Math.PI - 0.62, Math.PI + 0.62);
+  group.add(new THREE.Mesh(mergeSafe(wingMullionGeos), brushedSteelMat));
+
+  // Slim glowing roofline rim accents on crescent pavilions
+  const crescentTrim1 = new THREE.Mesh(
+    new THREE.TorusGeometry(31.2, 0.14, 6, 36, 1.24),
+    plazaRingGlowMat
+  );
+  crescentTrim1.rotation.x = Math.PI / 2;
+  crescentTrim1.rotation.z = -0.62;
+  crescentTrim1.position.y = 7.75;
+  group.add(crescentTrim1);
+
+  const crescentTrim2 = new THREE.Mesh(
+    new THREE.TorusGeometry(31.2, 0.14, 6, 36, 1.24),
+    plazaRingGlowMat
+  );
+  crescentTrim2.rotation.x = Math.PI / 2;
+  crescentTrim2.rotation.z = Math.PI - 0.62;
+  crescentTrim2.position.y = 7.75;
+  group.add(crescentTrim2);
+
+  // Inner multi-level architectural exhibition decks + pulsing quantum core
+  const innerCoreMat = new THREE.MeshStandardMaterial({
+    color: 0x00e5ff,
+    emissive: 0x00d8ff,
+    emissiveIntensity: 1.5,
     roughness: 0.15
   });
-  const innerCore = new THREE.Mesh(new THREE.IcosahedronGeometry(7.5, 2), innerCoreMat);
-  innerCore.position.y = 25;
+  const innerCore = new THREE.Mesh(new THREE.IcosahedronGeometry(6.4, 2), innerCoreMat);
+  innerCore.position.y = 25.5;
   group.add(innerCore);
 
   const deckMat = new THREE.MeshStandardMaterial({
-    color: 0x94e2ff,
+    color: 0x7dd3fc,
     emissive: 0x00c8ff,
-    emissiveIntensity: 1.1,
+    emissiveIntensity: 0.85,
     roughness: 0.3
   });
   for (let i = -2; i <= 2; i++) {
-    const dy = i * 5.2;
-    const dr = Math.sqrt(Math.max(1, 20.5 * 20.5 - dy * dy)) * 0.85;
-    const deck = new THREE.Mesh(new THREE.TorusGeometry(dr, 0.35, 8, 36), deckMat);
+    const dy = i * 5.0;
+    const dr = Math.sqrt(Math.max(1, 20.5 * 20.5 - dy * dy)) * 0.86;
+    const deck = new THREE.Mesh(new THREE.TorusGeometry(dr, 0.22, 8, 42), deckMat);
     deck.rotation.x = Math.PI / 2;
-    deck.position.y = 25 + dy;
+    deck.position.y = 25.5 + dy;
     group.add(deck);
   }
 
   // Outer Monumental Geodesic Glass Sphere (r = 22)
   const glassMat = new THREE.MeshStandardMaterial({
-    color: 0x3b72a8,
-    emissive: 0x06233d,
-    emissiveIntensity: 0.35,
-    metalness: 0.82,
-    roughness: 0.14,
+    color: 0x1e4b7a,
+    emissive: 0x051b33,
+    emissiveIntensity: 0.28,
+    metalness: 0.86,
+    roughness: 0.12,
     transparent: true,
-    opacity: 0.68
+    opacity: 0.62
   });
   const outerSphere = new THREE.Mesh(new THREE.IcosahedronGeometry(22, 3), glassMat);
-  outerSphere.position.y = 25;
+  outerSphere.position.y = 25.5;
   outerSphere.castShadow = true;
   group.add(outerSphere);
 
@@ -651,36 +757,36 @@ export function buildNurAlem() {
     color: 0x38e8ff,
     wireframe: true,
     transparent: true,
-    opacity: 0.42
+    opacity: 0.36
   });
-  const lattice = new THREE.Mesh(new THREE.IcosahedronGeometry(22.18, 2), latticeMat);
-  lattice.position.y = 25;
+  const lattice = new THREE.Mesh(new THREE.IcosahedronGeometry(22.16, 2), latticeMat);
+  lattice.position.y = 25.5;
   group.add(lattice);
 
   // Twin rooftop wind-turbine accent rings at top pole
   const turbineMat = new THREE.MeshBasicMaterial({ color: 0x00ffb3 });
-  const turbine1 = new THREE.Mesh(new THREE.TorusGeometry(4.2, 0.28, 8, 24), turbineMat);
-  turbine1.position.set(-4.5, 45.5, 0);
+  const turbine1 = new THREE.Mesh(new THREE.TorusGeometry(3.9, 0.22, 8, 24), turbineMat);
+  turbine1.position.set(-4.3, 46.0, 0);
   group.add(turbine1);
-  const turbine2 = new THREE.Mesh(new THREE.TorusGeometry(4.2, 0.28, 8, 24), turbineMat);
-  turbine2.position.set(4.5, 45.5, 0);
+  const turbine2 = new THREE.Mesh(new THREE.TorusGeometry(3.9, 0.22, 8, 24), turbineMat);
+  turbine2.position.set(4.3, 46.0, 0);
   group.add(turbine2);
 
   // 2077 Orbiting Equatorial Quantum Hologram Ring
   const eqRingMat = new THREE.MeshBasicMaterial({
     color: 0x00ffb3,
     transparent: true,
-    opacity: 0.72,
+    opacity: 0.65,
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
-  const eqRing = new THREE.Mesh(new THREE.TorusGeometry(28.5, 0.32, 8, 72), eqRingMat);
-  eqRing.position.y = 25;
+  const eqRing = new THREE.Mesh(new THREE.TorusGeometry(28.0, 0.24, 8, 72), eqRingMat);
+  eqRing.position.y = 25.5;
   eqRing.rotation.x = Math.PI / 2.25;
   group.add(eqRing);
 
-  const sphereLight = new THREE.PointLight(0x00e5ff, 22, 100, 1.4);
-  sphereLight.position.set(0, 25, 0);
+  const sphereLight = new THREE.PointLight(0x00d8ff, 18, 95, 1.4);
+  sphereLight.position.set(0, 25.5, 0);
   group.add(sphereLight);
 
   return {
@@ -693,204 +799,369 @@ export function buildNurAlem() {
       turbine2.rotation.z = -time * 2.2;
 
       const pulse = 0.5 + 0.5 * Math.sin(time * 2.0);
-      // In Real Astana (cyber=0): sleek dark-blue reflective museum sphere with warm floor lighting
-      // In Night City (cyber=1): glowing quantum reactor core + cyan geodesic mullions + orbiting holo-ring!
       glassMat.opacity = THREE.MathUtils.lerp(0.84, 0.52, cyber);
-      glassMat.emissiveIntensity = THREE.MathUtils.lerp(0.12, 0.45, cyber);
+      glassMat.emissiveIntensity = THREE.MathUtils.lerp(0.1, 0.36, cyber);
+      wingGlassMat.emissive.setHex(0x886634).lerp(new THREE.Color(0x0a4468), cyber);
+      wingGlassMat.emissiveIntensity = THREE.MathUtils.lerp(0.22, 0.62, cyber);
+
+      plazaRingGlowMat.emissive.setHex(0xe5b864).lerp(new THREE.Color(0x00e5ff), cyber);
+      plazaRingGlowMat.emissiveIntensity = THREE.MathUtils.lerp(0.32, 1.4, cyber);
+
       innerCore.visible = cyber > 0.08;
-      innerCoreMat.emissiveIntensity = THREE.MathUtils.lerp(0.15, 1.35 + pulse * 0.28, cyber);
+      innerCoreMat.emissiveIntensity = THREE.MathUtils.lerp(0.15, 1.25 + pulse * 0.25, cyber);
       deckMat.emissive.setHex(0xd8a862).lerp(new THREE.Color(0x00d8ff), cyber);
-      deckMat.emissiveIntensity = THREE.MathUtils.lerp(0.28, 0.85, cyber);
+      deckMat.emissiveIntensity = THREE.MathUtils.lerp(0.24, 0.72, cyber);
       latticeMat.color.setHex(0x88a4c2).lerp(new THREE.Color(0x00e8ff), cyber);
-      latticeMat.opacity = THREE.MathUtils.lerp(0.22, 0.48, cyber);
+      latticeMat.opacity = THREE.MathUtils.lerp(0.22, 0.42, cyber);
       turbineMat.color.setHex(0x94a3b8).lerp(new THREE.Color(0x00ffb3), cyber);
 
       eqRing.visible = cyber > 0.1;
-      eqRingMat.opacity = THREE.MathUtils.smoothstep(cyber, 0.1, 0.9) * 0.72;
-      sphereLight.intensity = THREE.MathUtils.lerp(8, 28, cyber);
+      eqRingMat.opacity = THREE.MathUtils.smoothstep(cyber, 0.1, 0.9) * 0.68;
+      sphereLight.intensity = THREE.MathUtils.lerp(8, 22, cyber);
     }
   };
 }
 
 /* ============================================================================
    5. AK ORDA PRESIDENTIAL PALACE (Восточная ось · Набережная Есиля · X=108, Z=0)
+      Monumental Warm-Ivory Marble Neoclassical Palace · Fluted Columns w/ Bases & Capitals
+      Recessed Warm Gold Windows · Tall Windowed Rotunda Drum · Ribbed Turquoise Dome
    ============================================================================ */
 export function buildAkOrda() {
   const group = new THREE.Group();
   group.name = 'Landmark_AkOrda';
   group.position.set(108, 0, 0);
 
+  // Authentic illuminated warm-ivory Italian marble (stays bright noble marble even in Night City!)
   const marbleMat = new THREE.MeshStandardMaterial({
-    color: 0xbec8d8,
-    roughness: 0.46,
-    metalness: 0.15
-  });
-  const darkMarbleMat = new THREE.MeshStandardMaterial({
-    color: 0x263148,
+    color: 0xeee8dc,
+    emissive: 0x262018,
+    emissiveIntensity: 0.45,
     roughness: 0.42,
-    metalness: 0.35
+    metalness: 0.12
+  });
+  const trimMarbleMat = new THREE.MeshStandardMaterial({
+    color: 0xf7f2e8,
+    emissive: 0x2c2419,
+    emissiveIntensity: 0.5,
+    roughness: 0.36,
+    metalness: 0.16
+  });
+  const graniteMat = new THREE.MeshStandardMaterial({
+    color: 0x252d3d,
+    roughness: 0.52,
+    metalness: 0.25
+  });
+  const bronzeRecessMat = new THREE.MeshStandardMaterial({
+    color: 0x161b24,
+    roughness: 0.32,
+    metalness: 0.65
   });
   const goldMat = new THREE.MeshStandardMaterial({
-    color: 0xffd152,
-    emissive: 0xffa600,
-    emissiveIntensity: 0.8,
+    color: 0xffd25a,
+    emissive: 0xdda018,
+    emissiveIntensity: 0.72,
     metalness: 0.92,
-    roughness: 0.18
+    roughness: 0.16
   });
 
-  // Grand ceremonial raised esplanade podium + western steps
-  const podium = new THREE.Mesh(new THREE.BoxGeometry(38, 4, 58), darkMarbleMat);
-  podium.position.set(0, 2, 0);
-  podium.receiveShadow = true;
-  group.add(podium);
+  // Grand terraced granite & marble ceremonial esplanade podium + West ceremonial steps + East river terrace
+  const baseEsplanade = new THREE.Mesh(new THREE.BoxGeometry(42, 2.2, 62), graniteMat);
+  baseEsplanade.position.set(0, 1.1, 0);
+  baseEsplanade.receiveShadow = true;
+  group.add(baseEsplanade);
 
-  const stairs = new THREE.Mesh(new THREE.BoxGeometry(8, 2.2, 24), marbleMat);
-  stairs.position.set(-22, 1.1, 0);
-  group.add(stairs);
+  const upperEsplanade = new THREE.Mesh(new THREE.BoxGeometry(36, 2.0, 56), marbleMat);
+  upperEsplanade.position.set(0, 3.2, 0);
+  upperEsplanade.receiveShadow = true;
+  group.add(upperEsplanade);
 
-  // Main neoclassical rectangular palace body & taller central pavilion
-  const mainBody = new THREE.Mesh(new THREE.BoxGeometry(24, 15, 48), marbleMat);
-  mainBody.position.set(0, 11.5, 0);
+  // Sweeping stepped ceremonial staircase on West & East axes
+  for (let s = 0; s < 4; s++) {
+    const stepW = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.52, 24 - s * 1.4), trimMarbleMat);
+    stepW.position.set(-22.5 + s * 1.5, 0.4 + s * 0.52, 0);
+    group.add(stepW);
+    const stepE = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.52, 22 - s * 1.4), trimMarbleMat);
+    stepE.position.set(22.2 - s * 1.4, 0.4 + s * 0.52, 0);
+    group.add(stepE);
+  }
+
+  // Main Neoclassical Marble Wings (24 x 16 x 50) + Recessed Dark Glazing Core
+  const wingRecess = new THREE.Mesh(new THREE.BoxGeometry(23.4, 15.6, 49.4), bronzeRecessMat);
+  wingRecess.position.set(0, 12.0, 0);
+  group.add(wingRecess);
+
+  const mainBody = new THREE.Mesh(new THREE.BoxGeometry(22.6, 16.0, 50.0), marbleMat);
+  mainBody.position.set(0, 12.2, 0);
   mainBody.castShadow = true;
   mainBody.receiveShadow = true;
   group.add(mainBody);
 
-  const centerBlock = new THREE.Mesh(new THREE.BoxGeometry(27, 20, 22), marbleMat);
-  centerBlock.position.set(-1, 14, 0);
-  centerBlock.castShadow = true;
-  group.add(centerBlock);
+  // Taller Protruding Central Ceremonial Pavilion (26 x 21 x 23)
+  const centerBody = new THREE.Mesh(new THREE.BoxGeometry(25.2, 21.0, 23.0), marbleMat);
+  centerBody.position.set(0, 14.7, 0);
+  centerBody.castShadow = true;
+  group.add(centerBody);
 
-  // Classical cornice roof trim
-  const cornice = new THREE.Mesh(new THREE.BoxGeometry(29, 1.4, 24), marbleMat);
-  cornice.position.set(-1, 24.4, 0);
-  group.add(cornice);
-
-  // Portico colonnades on BOTH West (Boulevard) AND East (Esil River) facades!
-  const colGeos = [];
-  for (let i = 0; i < 10; i++) {
-    const z = -20 + (i / 9) * 40;
-    const isCenter = Math.abs(z) < 11;
-    const h = isCenter ? 19.5 : 14.5;
-    // West facade columns (facing Nurzhol Boulevard)
-    const xW = isCenter ? -15.2 : -12.8;
-    const colW = new THREE.CylinderGeometry(0.52, 0.62, h, 10);
-    colW.translate(xW, 4 + h / 2, z);
-    colGeos.push(colW);
-    // East facade columns (facing Esil River & Pyramid)
-    const xE = isCenter ? 13.2 : 12.8;
-    const colE = new THREE.CylinderGeometry(0.52, 0.62, h, 10);
-    colE.translate(xE, 4 + h / 2, z);
-    colGeos.push(colE);
+  // Sculpted Architectural Cornice Ledges, Stringcourses & Balustrade Parapets (merged)
+  const corniceGeos = [];
+  // Horizontal floor belt stringcourses wrapping wings & center
+  for (const hy of [9.6, 14.8, 20.1]) {
+    const wingBelt = new THREE.BoxGeometry(24.4, 0.65, 51.4);
+    wingBelt.translate(0, hy, 0);
+    corniceGeos.push(wingBelt);
   }
-  group.add(new THREE.Mesh(mergeSafe(colGeos), marbleMat));
+  // Wing roof overhanging classical cornice + parapet
+  const wingCornice = new THREE.BoxGeometry(25.4, 1.0, 52.4);
+  wingCornice.translate(0, 20.6, 0);
+  corniceGeos.push(wingCornice);
 
-  // Classical pediment cornice band & illuminated frieze trim
-  const corniceGlowMat = new THREE.MeshStandardMaterial({
-    color: 0xffd152,
-    emissive: 0x00e5ff,
-    emissiveIntensity: 1.2,
-    roughness: 0.2
-  });
-  const corniceTrim = new THREE.Mesh(new THREE.BoxGeometry(29.6, 0.45, 24.6), corniceGlowMat);
-  corniceTrim.position.set(-1, 24.9, 0);
-  group.add(corniceTrim);
-  const wingTrim = new THREE.Mesh(new THREE.BoxGeometry(24.6, 0.42, 48.6), corniceGlowMat);
-  wingTrim.position.set(0, 19.2, 0);
-  group.add(wingTrim);
+  // Center pavilion overhanging classical cornice + attic pedestal
+  const centerCornice = new THREE.BoxGeometry(28.4, 1.25, 25.6);
+  centerCornice.translate(0, 25.4, 0);
+  corniceGeos.push(centerCornice);
 
-  // Illuminated arched palace window bays (cleanly offset outside walls — zero Z-fighting!)
+  const centerAttic = new THREE.BoxGeometry(24.6, 2.2, 22.0);
+  centerAttic.translate(0, 27.0, 0);
+  corniceGeos.push(centerAttic);
+
+  // Stepped classical triangular pediment gables crowning West & East porticos
+  for (const side of [-1, 1]) {
+    const pedBase = new THREE.BoxGeometry(1.6, 0.9, 17.5);
+    pedBase.translate(side * 14.2, 25.8, 0);
+    corniceGeos.push(pedBase);
+    const pedMid = new THREE.BoxGeometry(1.5, 1.3, 12.0);
+    pedMid.translate(side * 14.2, 26.8, 0);
+    corniceGeos.push(pedMid);
+    const pedTop = new THREE.BoxGeometry(1.4, 1.1, 6.2);
+    pedTop.translate(side * 14.2, 27.9, 0);
+    corniceGeos.push(pedTop);
+  }
+  group.add(new THREE.Mesh(mergeSafe(corniceGeos), trimMarbleMat));
+
+  // SLENDER FLUTED NEOCLASSICAL COLUMNS WITH PLINTH BASES & FLARED CAPITALS (Both West & East Porticos!)
+  const colGeos = [];
+  const colPositionsZ = [-22.5, -18.5, -14.5, -9.2, -5.6, -2.0, 2.0, 5.6, 9.2, 14.5, 18.5, 22.5];
+  for (const z of colPositionsZ) {
+    const isCenter = Math.abs(z) < 10.5;
+    const colH = isCenter ? 19.6 : 14.8;
+    for (const side of [-1, 1]) {
+      const cx = side * (isCenter ? 14.2 : 12.6);
+      // Square marble plinth base
+      const plinth = new THREE.BoxGeometry(1.15, 0.85, 1.15);
+      plinth.translate(cx, 4.62, z);
+      colGeos.push(plinth);
+      // Slender tapered shaft
+      const shaft = new THREE.CylinderGeometry(0.32, 0.40, colH, 12);
+      shaft.translate(cx, 5.05 + colH * 0.5, z);
+      colGeos.push(shaft);
+      // Flared Corinthian-inspired capital & abacus
+      const cap = new THREE.CylinderGeometry(0.56, 0.34, 0.72, 12);
+      cap.translate(cx, 5.05 + colH + 0.32, z);
+      colGeos.push(cap);
+      const abacus = new THREE.BoxGeometry(1.15, 0.32, 1.15);
+      abacus.translate(cx, 5.05 + colH + 0.78, z);
+      colGeos.push(abacus);
+    }
+  }
+  group.add(new THREE.Mesh(mergeSafe(colGeos), trimMarbleMat));
+
+  // RECESSED WARM-GOLD PALACE WINDOWS (3 distinct architectural floor tiers framed between columns!)
   const winMat = new THREE.MeshStandardMaterial({
-    color: 0xffe4a0,
-    emissive: 0xffb833,
-    emissiveIntensity: 1.0,
-    roughness: 0.2
+    color: 0xffd584,
+    emissive: 0xffab2e,
+    emissiveIntensity: 1.05,
+    roughness: 0.18
   });
   const winGeos = [];
-  for (let i = -5; i <= 5; i++) {
-    const z = i * 4.1;
+  const winZ = [-20.5, -16.5, -12.4, -7.4, -3.8, 0, 3.8, 7.4, 12.4, 16.5, 20.5];
+  for (const z of winZ) {
     const isCenter = Math.abs(z) < 10.5;
-    const boxW = new THREE.BoxGeometry(0.35, isCenter ? 11.0 : 8.5, 1.7);
-    boxW.translate(isCenter ? -14.6 : -12.2, isCenter ? 12.5 : 11.5, z);
-    winGeos.push(boxW);
-    const boxE = new THREE.BoxGeometry(0.35, isCenter ? 11.0 : 8.5, 1.7);
-    boxE.translate(isCenter ? 12.65 : 12.2, isCenter ? 12.5 : 11.5, z);
-    winGeos.push(boxE);
+    const tiers = isCenter ? [7.0, 12.2, 17.5, 22.0] : [7.0, 12.2, 17.2];
+    for (const wy of tiers) {
+      const wh = wy > 16 ? 3.2 : 3.6;
+      const ww = isCenter ? 1.8 : 1.75;
+      for (const side of [-1, 1]) {
+        const wx = side * (isCenter ? 12.75 : 11.45);
+        // Dark bronze window mullion frame behind warm glass
+        const pane = new THREE.BoxGeometry(0.28, wh, ww);
+        pane.translate(wx, wy, z);
+        winGeos.push(pane);
+      }
+    }
+  }
+  // North & South end facade palace windows
+  for (const wx of [-7.5, -2.5, 2.5, 7.5]) {
+    for (const wy of [7.0, 12.2, 17.2]) {
+      for (const sz of [-25.15, 25.15]) {
+        const pane = new THREE.BoxGeometry(1.75, 3.4, 0.28);
+        pane.translate(wx, wy, sz);
+        winGeos.push(pane);
+      }
+    }
   }
   group.add(new THREE.Mesh(mergeSafe(winGeos), winMat));
 
-  // Drum rotunda supporting the iconic blue dome
-  const drum = new THREE.Mesh(new THREE.CylinderGeometry(9.6, 10.2, 6.5, 24), marbleMat);
-  drum.position.set(-1, 27.8, 0);
+  // PROPER TALL WINDOWED CYLINDRICAL ROTUNDA DRUM supporting the Turquoise Dome
+  const drum = new THREE.Mesh(new THREE.CylinderGeometry(9.2, 9.6, 8.2, 32), marbleMat);
+  drum.position.set(0, 31.8, 0);
   group.add(drum);
 
-  // ICONIC TURQUOISE-BLUE DOME
+  // Classical Drum Base & Crown Cornice Rings + 16 Tall Arched Clerestory Windows around the Drum!
+  const drumTrimGeos = [];
+  const drumWinGeos = [];
+  const drumColGeos = [];
+  const dBaseRing = new THREE.CylinderGeometry(10.1, 10.3, 0.85, 32);
+  dBaseRing.translate(0, 28.0, 0);
+  drumTrimGeos.push(dBaseRing);
+  const dTopRing = new THREE.CylinderGeometry(10.0, 9.5, 1.0, 32);
+  dTopRing.translate(0, 35.8, 0);
+  drumTrimGeos.push(dTopRing);
+
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    const wx = Math.cos(a) * 9.32;
+    const wz = Math.sin(a) * 9.32;
+    const dw = new THREE.BoxGeometry(0.32, 4.4, 1.35);
+    dw.rotateY(-a);
+    dw.translate(wx, 31.9, wz);
+    drumWinGeos.push(dw);
+
+    // Paired pilasters between drum windows
+    const aCol = a + Math.PI / 16;
+    const dc = new THREE.CylinderGeometry(0.24, 0.28, 7.2, 8);
+    dc.translate(Math.cos(aCol) * 9.55, 31.9, Math.sin(aCol) * 9.55);
+    drumColGeos.push(dc);
+  }
+  group.add(new THREE.Mesh(mergeSafe([...drumTrimGeos, ...drumColGeos]), trimMarbleMat));
+  group.add(new THREE.Mesh(mergeSafe(drumWinGeos), winMat));
+
+  // ICONIC RIBBED TURQUOISE-BLUE DOME (with 16 raised sculpted golden-ivory meridian ribs!)
   const domeMat = new THREE.MeshStandardMaterial({
-    color: 0x0ea5e9,
-    emissive: 0x00b4ff,
-    emissiveIntensity: 0.75,
-    metalness: 0.45,
-    roughness: 0.24
+    color: 0x0b8fd8,
+    emissive: 0x045f9e,
+    emissiveIntensity: 0.55,
+    metalness: 0.42,
+    roughness: 0.22
   });
   const dome = new THREE.Mesh(
-    new THREE.SphereGeometry(9.8, 28, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.SphereGeometry(9.35, 32, 18, 0, Math.PI * 2, 0, Math.PI / 2),
     domeMat
   );
-  dome.position.set(-1, 31.0, 0);
+  dome.position.set(0, 36.1, 0);
   group.add(dome);
 
-  // Holographic cyber grid wrapping the turquoise dome in 2077 mode
+  const domeRibGeos = [];
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    const pts = [];
+    for (let s = 0; s <= 10; s++) {
+      const phi = (s / 10) * (Math.PI / 2);
+      const r = 9.48 * Math.cos(phi);
+      const y = 36.1 + 9.48 * Math.sin(phi);
+      pts.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
+    }
+    domeRibGeos.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 12, 0.14, 5, false));
+  }
+  group.add(new THREE.Mesh(mergeSafe(domeRibGeos), goldMat));
+
+  // Delicate translucent holographic dome grid in 2077 mode (never hides the ribbed turquoise dome!)
   const holoDomeMat = new THREE.MeshBasicMaterial({
     color: 0x00f0ff,
     wireframe: true,
     transparent: true,
-    opacity: 0.55,
-    blending: THREE.AdditiveBlending
+    opacity: 0.26,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
   });
   const holoDome = new THREE.Mesh(
-    new THREE.SphereGeometry(10.05, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+    new THREE.SphereGeometry(9.85, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2),
     holoDomeMat
   );
-  holoDome.position.set(-1, 31.0, 0);
+  holoDome.position.set(0, 36.1, 0);
   group.add(holoDome);
 
-  // Tall Golden Spire + Sunburst Emblem
-  const spire = new THREE.Mesh(new THREE.ConeGeometry(0.9, 15.5, 10), goldMat);
-  spire.position.set(-1, 48.2, 0);
+  // Tiered Golden Cupola Lantern + Refined Slender Golden Spire + Sunburst Finial
+  const lantern = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.85, 2.4, 12), goldMat);
+  lantern.position.set(0, 46.2, 0);
+  group.add(lantern);
+  const spire = new THREE.Mesh(new THREE.ConeGeometry(0.55, 16.5, 10), goldMat);
+  spire.position.set(0, 55.4, 0);
   group.add(spire);
-  const sunOrb = new THREE.Mesh(new THREE.SphereGeometry(1.1, 12, 12), goldMat);
-  sunOrb.position.set(-1, 56.2, 0);
+  const sunOrb = new THREE.Mesh(new THREE.SphereGeometry(0.95, 12, 12), goldMat);
+  sunOrb.position.set(0, 63.8, 0);
   group.add(sunOrb);
 
-  // Cyber perimeter accent pylons along the marble esplanade
-  const pylonMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
-  const pylonGroup = new THREE.Group();
-  for (const pz of [-24, -14, 14, 24]) {
-    const pylon = new THREE.Mesh(new THREE.BoxGeometry(0.45, 7.5, 0.45), pylonMat);
-    pylon.position.set(-18.5, 7.8, pz);
-    pylonGroup.add(pylon);
+  // Razor-thin Cyber Architectural Cornice Perimeter Edge Bars (hollow rectangular rim — never fills roof!)
+  const cyberTrimMat = new THREE.MeshStandardMaterial({
+    color: 0x00f0ff,
+    emissive: 0x00e5ff,
+    emissiveIntensity: 1.45,
+    roughness: 0.15
+  });
+  const trimLinesGeos = [];
+  function addRectRim(w, d, y, thick = 0.24) {
+    const north = new THREE.BoxGeometry(w, thick, thick);
+    north.translate(0, y, -d * 0.5);
+    const south = new THREE.BoxGeometry(w, thick, thick);
+    south.translate(0, y, d * 0.5);
+    const west = new THREE.BoxGeometry(thick, thick, d);
+    west.translate(-w * 0.5, y, 0);
+    const east = new THREE.BoxGeometry(thick, thick, d);
+    east.translate(w * 0.5, y, 0);
+    trimLinesGeos.push(north, south, west, east);
   }
-  group.add(pylonGroup);
+  addRectRim(28.6, 25.8, 25.95, 0.24);
+  addRectRim(25.6, 52.6, 21.05, 0.22);
+  const t3 = new THREE.TorusGeometry(10.05, 0.14, 6, 48);
+  t3.rotateX(Math.PI / 2);
+  t3.translate(0, 36.2, 0);
+  trimLinesGeos.push(t3);
+  const cyberTrimMesh = new THREE.Mesh(mergeSafe(trimLinesGeos), cyberTrimMat);
+  group.add(cyberTrimMesh);
 
-  const domeLight = new THREE.PointLight(0x00d8ff, 20, 95, 1.4);
-  domeLight.position.set(-1, 44, 0);
+  // Dedicated warm-ivory architectural facade uplights on West & East colonnades
+  const facadeLightW = new THREE.PointLight(0xffd28a, 24, 58, 1.5);
+  facadeLightW.position.set(-20, 14, 0);
+  group.add(facadeLightW);
+
+  const facadeLightE = new THREE.PointLight(0xffd28a, 24, 58, 1.5);
+  facadeLightE.position.set(20, 14, 0);
+  group.add(facadeLightE);
+
+  const domeLight = new THREE.PointLight(0x00d8ff, 18, 80, 1.5);
+  domeLight.position.set(0, 48, 0);
   group.add(domeLight);
 
   return {
     group,
     update(time, cyber) {
-      marbleMat.color.setHex(0xd8dee9).lerp(new THREE.Color(0x4b5c7a), cyber * 0.65);
-      corniceGlowMat.color.setHex(0x8899ad).lerp(new THREE.Color(0x00d8ff), cyber);
-      corniceGlowMat.emissive.setHex(0xd8a852).lerp(new THREE.Color(0x00d8ff), cyber);
-      corniceGlowMat.emissiveIntensity = THREE.MathUtils.lerp(0.08, 0.62, cyber);
-      domeMat.emissiveIntensity = THREE.MathUtils.lerp(0.22, 0.92, cyber);
-      goldMat.emissiveIntensity = THREE.MathUtils.lerp(0.35, 1.25, cyber);
-      winMat.emissive.setHex(0xe8ae48).lerp(new THREE.Color(0x00d8ff), cyber * 0.55);
-      winMat.emissiveIntensity = THREE.MathUtils.lerp(0.65, 1.15, cyber);
+      // Keep Ak Orda unmistakably illuminated ivory-white marble in BOTH Dusk and Night City 2077!
+      marbleMat.color.setHex(0xeee8dc).lerp(new THREE.Color(0xcad5e4), cyber * 0.55);
+      marbleMat.emissive.setHex(0x282117).lerp(new THREE.Color(0x162638), cyber);
+      marbleMat.emissiveIntensity = THREE.MathUtils.lerp(0.32, 0.58, cyber);
+
+      trimMarbleMat.color.setHex(0xf8f3ea).lerp(new THREE.Color(0xdbe6f4), cyber * 0.45);
+      trimMarbleMat.emissive.setHex(0x30271a).lerp(new THREE.Color(0x1b3048), cyber);
+      trimMarbleMat.emissiveIntensity = THREE.MathUtils.lerp(0.35, 0.65, cyber);
+
+      domeMat.emissiveIntensity = THREE.MathUtils.lerp(0.30, 0.85, cyber);
+      goldMat.emissiveIntensity = THREE.MathUtils.lerp(0.45, 1.25, cyber);
+      winMat.emissive.setHex(0xffb438).lerp(new THREE.Color(0xffc24d), cyber);
+      winMat.emissiveIntensity = THREE.MathUtils.lerp(0.85, 1.25, cyber);
+
+      cyberTrimMesh.visible = cyber > 0.12;
+      cyberTrimMat.emissiveIntensity = cyber * 1.65;
+
       holoDome.visible = cyber > 0.15;
       holoDome.rotation.y = time * 0.18;
-      holoDomeMat.opacity = THREE.MathUtils.smoothstep(cyber, 0.15, 0.9) * 0.48;
-      pylonGroup.visible = cyber > 0.2;
-      domeLight.intensity = THREE.MathUtils.lerp(10, 26, cyber);
+      holoDomeMat.opacity = THREE.MathUtils.smoothstep(cyber, 0.15, 0.9) * 0.28;
+
+      facadeLightW.color.setHex(0xffd48f).lerp(new THREE.Color(0x9ee8ff), cyber * 0.42);
+      facadeLightE.color.setHex(0xffd48f).lerp(new THREE.Color(0x9ee8ff), cyber * 0.42);
+      facadeLightW.intensity = THREE.MathUtils.lerp(18, 30, cyber);
+      facadeLightE.intensity = THREE.MathUtils.lerp(18, 30, cyber);
+      domeLight.intensity = THREE.MathUtils.lerp(10, 24, cyber);
     }
   };
 }
@@ -1276,62 +1547,149 @@ export function buildUrbanBaseAndRiver() {
     group.add(pool);
   }
 
-  // 2 Futuristic Glass & Neon Pedestrian Skybridges crossing Nurzhol Boulevard
+  // 2 SLEEK CYBERPUNK GLAZED TRUSS PEDESTRIAN SKYBRIDGES crossing Nurzhol Boulevard
   const skybridgeGlassMat = new THREE.MeshStandardMaterial({
-    color: 0x0f2b46,
+    color: 0x0b1a2e,
+    emissive: 0x06243d,
+    emissiveIntensity: 0.35,
+    metalness: 0.9,
+    roughness: 0.12,
+    transparent: true,
+    opacity: 0.44
+  });
+  const skybridgeFrameMat = new THREE.MeshStandardMaterial({
+    color: 0x334155,
+    metalness: 0.88,
+    roughness: 0.25
+  });
+  const skybridgeFloorGlowMat = new THREE.MeshStandardMaterial({
+    color: 0xffd584,
     emissive: 0x00e5ff,
-    emissiveIntensity: 0.9,
-    metalness: 0.8,
+    emissiveIntensity: 1.0,
+    roughness: 0.25
+  });
+  const skybridgeCyanRailMat = new THREE.MeshStandardMaterial({
+    color: 0x00f0ff,
+    emissive: 0x00f0ff,
+    emissiveIntensity: 1.65,
     roughness: 0.15
   });
-  const skybridgeNeonMat = new THREE.MeshStandardMaterial({
-    color: 0xff005c,
-    emissive: 0xff005c,
-    emissiveIntensity: 2.6
+  const skybridgeAmberRailMat = new THREE.MeshStandardMaterial({
+    color: 0xffb82e,
+    emissive: 0xffb82e,
+    emissiveIntensity: 1.5,
+    roughness: 0.15
   });
-  for (const sx of [-62, 54]) {
+
+  function buildGlazedTrussSkybridge(sx) {
     const sb = new THREE.Group();
-    sb.position.set(sx, 14.5, 0);
-    const tube = new THREE.Mesh(new THREE.BoxGeometry(4.2, 3.2, 44), skybridgeGlassMat);
-    sb.add(tube);
-    const stripTop = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.3, 44), skybridgeNeonMat);
-    stripTop.position.y = 1.7;
-    sb.add(stripTop);
-    for (const sz of [-20, 20]) {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(2.4, 14.5, 2.4), wallMat);
-      leg.position.set(0, -7.25, sz);
-      sb.add(leg);
+    sb.position.set(sx, 14.2, 0);
+
+    const span = 46;
+    // Translucent dark smoked-glass elliptical walkway tunnel
+    const glassTunnel = new THREE.Mesh(
+      new THREE.CylinderGeometry(2.1, 2.1, span, 14, 1, true),
+      skybridgeGlassMat
+    );
+    glassTunnel.rotation.x = Math.PI / 2;
+    glassTunnel.scale.set(1.08, 1.0, 0.86);
+    sb.add(glassTunnel);
+
+    // Solid dark deck base + glowing interior walkway floor strip
+    const deckSlab = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.48, span), skybridgeFrameMat);
+    deckSlab.position.y = -1.62;
+    sb.add(deckSlab);
+
+    const floorGlow = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, span - 1.5), skybridgeFloorGlowMat);
+    floorGlow.position.y = -1.32;
+    sb.add(floorGlow);
+
+    // Rhythmic curved steel exo-ribs + longitudinal spine + twin V-truss steel pylons (merged!)
+    const trussGeos = [];
+    // Roof & side longitudinal chord rails
+    const spine = new THREE.BoxGeometry(0.42, 0.34, span + 0.5);
+    spine.translate(0, 1.85, 0);
+    trussGeos.push(spine);
+    for (const side of [-1, 1]) {
+      const chord = new THREE.BoxGeometry(0.24, 0.24, span);
+      chord.translate(side * 2.18, -0.35, 0);
+      trussGeos.push(chord);
     }
-    group.add(sb);
+
+    // 11 rhythmic curved steel arch ribs wrapping around the glazed tube
+    for (let i = -5; i <= 5; i++) {
+      const rz = i * 4.2;
+      const rib = new THREE.TorusGeometry(2.26, 0.13, 6, 18);
+      rib.scale(1.06, 0.86, 1.0);
+      rib.translate(0, 0, rz);
+      trussGeos.push(rib);
+    }
+
+    // Sculpted Twin V-Truss Steel Pylons with horizontal cross-bracing on North & South flanks
+    for (const sz of [-20.5, 20.5]) {
+      for (const legSide of [-1, 1]) {
+        const topPt = new THREE.Vector3(legSide * 1.4, -1.6, sz);
+        const botPt = new THREE.Vector3(legSide * 3.1, -14.2, sz + Math.sign(sz) * 1.2);
+        trussGeos.push(new THREE.TubeGeometry(new THREE.LineCurve3(botPt, topPt), 2, 0.34, 6, false));
+      }
+      // Cross braces between V-legs
+      for (const cy of [-5.2, -9.8]) {
+        const brace = new THREE.BoxGeometry(4.4, 0.28, 0.32);
+        brace.translate(0, cy, sz + Math.sign(sz) * 0.45);
+        trussGeos.push(brace);
+      }
+    }
+    sb.add(new THREE.Mesh(mergeSafe(trussGeos), skybridgeFrameMat));
+
+    // Razor-thin cyan & amber under-rail neon accent tubes
+    const railWest = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, span), skybridgeCyanRailMat);
+    railWest.position.set(-2.0, -1.86, 0);
+    sb.add(railWest);
+    const railEast = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.14, span), skybridgeAmberRailMat);
+    railEast.position.set(2.0, -1.86, 0);
+    sb.add(railEast);
+
+    return sb;
   }
 
-  // Boulevard Futuristic Cyber-Streetlamps (InstancedMesh — 1 draw call!)
+  group.add(buildGlazedTrussSkybridge(-62));
+  group.add(buildGlazedTrussSkybridge(54));
+
+  // Boulevard Futuristic Curved Streetlamps (InstancedMesh)
   const lampPosts = [];
   for (let lx = -92; lx <= 88; lx += 14) {
     if (Math.abs(lx) < 22) continue;
-    lampPosts.push([lx, -9.8], [lx, 9.8]);
+    lampPosts.push([lx, -9.8, 1], [lx, 9.8, -1]);
   }
   const poleInst = new THREE.InstancedMesh(
-    new THREE.CylinderGeometry(0.14, 0.2, 6.4, 6),
-    wallMat,
+    new THREE.CylinderGeometry(0.10, 0.18, 6.8, 6),
+    skybridgeFrameMat,
     lampPosts.length
   );
-  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xfcee0a });
+  const armInst = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.14, 0.14, 1.8),
+    skybridgeFrameMat,
+    lampPosts.length
+  );
+  const bulbMat = new THREE.MeshBasicMaterial({ color: 0xffe4a0 });
   const bulbInst = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(0.9, 0.26, 0.35),
+    new THREE.BoxGeometry(0.32, 0.16, 0.9),
     bulbMat,
     lampPosts.length
   );
   const dummy = new THREE.Object3D();
-  lampPosts.forEach(([x, z], idx) => {
-    dummy.position.set(x, 3.2, z);
+  lampPosts.forEach(([x, z, dir], idx) => {
+    dummy.position.set(x, 3.4, z);
     dummy.updateMatrix();
     poleInst.setMatrixAt(idx, dummy.matrix);
-    dummy.position.set(x, 6.45, z);
+    dummy.position.set(x, 6.8, z + dir * 0.7);
+    dummy.updateMatrix();
+    armInst.setMatrixAt(idx, dummy.matrix);
+    dummy.position.set(x, 6.68, z + dir * 1.15);
     dummy.updateMatrix();
     bulbInst.setMatrixAt(idx, dummy.matrix);
   });
-  group.add(poleInst, bulbInst);
+  group.add(poleInst, armInst, bulbInst);
 
   // ELEVATED CYBER-MONORAIL VIADUCT + ANIMATED MAGLEV TRAIN (sweeps cleanly south of Ak Orda esplanade)
   const railCurve = new THREE.CatmullRomCurve3([
@@ -1411,11 +1769,14 @@ export function buildUrbanBaseAndRiver() {
       bridgeArchMat.emissive.setHex(0xd4a448).lerp(new THREE.Color(0x00e5ff), cyber);
       bridgeArchMat.emissiveIntensity = THREE.MathUtils.lerp(0.22, 1.25, cyber);
       poolMat.emissiveIntensity = THREE.MathUtils.lerp(0.18, 1.05, cyber);
-      skybridgeGlassMat.emissive.setHex(0x3a526e).lerp(new THREE.Color(0x00d8ff), cyber);
-      skybridgeGlassMat.emissiveIntensity = THREE.MathUtils.lerp(0.14, 0.72, cyber);
-      skybridgeNeonMat.color.setHex(0x8899ad).lerp(new THREE.Color(0xff005c), cyber);
-      skybridgeNeonMat.emissive.setHex(0xd4a448).lerp(new THREE.Color(0xff005c), cyber);
-      skybridgeNeonMat.emissiveIntensity = THREE.MathUtils.lerp(0.12, 1.45, cyber);
+      skybridgeGlassMat.emissive.setHex(0x283a52).lerp(new THREE.Color(0x06324d), cyber);
+      skybridgeGlassMat.emissiveIntensity = THREE.MathUtils.lerp(0.12, 0.42, cyber);
+      skybridgeFloorGlowMat.emissive.setHex(0xd8a858).lerp(new THREE.Color(0x00e5ff), cyber);
+      skybridgeFloorGlowMat.emissiveIntensity = THREE.MathUtils.lerp(0.32, 1.05, cyber);
+      skybridgeCyanRailMat.emissive.setHex(0xd8a858).lerp(new THREE.Color(0x00f0ff), cyber);
+      skybridgeCyanRailMat.emissiveIntensity = THREE.MathUtils.lerp(0.12, 1.65, cyber);
+      skybridgeAmberRailMat.emissive.setHex(0xd8a858).lerp(new THREE.Color(0xffb82e), cyber);
+      skybridgeAmberRailMat.emissiveIntensity = THREE.MathUtils.lerp(0.12, 1.45, cyber);
 
       bulbMat.color.setHex(0xffd485).lerp(new THREE.Color(0xfcee0a), cyber);
       railGlowMat.color.setHex(0x64748b).lerp(new THREE.Color(0x00f0ff), cyber);

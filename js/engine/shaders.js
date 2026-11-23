@@ -1,6 +1,13 @@
 /**
  * Astana -> Night City 2077
- * Custom GLSL Shaders (Tuned for High-Contrast Obsidian + Saturated Neon Bloom)
+ * AAA Custom GLSL Shaders:
+ * 1. Sky Dome + Neon Smog Horizon + Sliced Cyber Moon + Orbital Ring
+ * 2. AAA Obsidian Architectural Glass Skyscraper Window Matrix (3x Finer, Clustered Office Strips, MEP Floors, Anti-Aliased)
+ * 3. AAA Esil River Dark Mirror Water + Fine Anisotropic Ripples & Stretched Neon Reflections
+ * 4. AAA Wet Charcoal Asphalt Boulevard + Crisp Lane Markings & Sharp Glossy Rain Puddles
+ * 5. Animated Holographic Mega-Billboards (Razor-Sharp NormalBlending + Scanlines + Glitch)
+ * 6. Volumetric Fresnel Searchlight Cones
+ * 7. GPU-Driven Wrap-Safe Neon Rain Streaks
  */
 import * as THREE from 'three';
 
@@ -14,10 +21,10 @@ export function createSkyMaterial() {
     uniforms: {
       uTime: { value: 0 },
       uCyber: { value: 1.0 },
-      uTopColor: { value: new THREE.Color(0x03020a) },
-      uMidColor: { value: new THREE.Color(0x0d0622) },
-      uHorizonColor: { value: new THREE.Color(0x8a0f45) },
-      uAccentColor: { value: new THREE.Color(0x007c99) }
+      uTopColor: { value: new THREE.Color(0x03030b) },
+      uMidColor: { value: new THREE.Color(0x0b071e) },
+      uHorizonColor: { value: new THREE.Color(0x880f44) },
+      uAccentColor: { value: new THREE.Color(0x0082a4) }
     },
     vertexShader: /* glsl */ `
       varying vec3 vWorldPos;
@@ -68,50 +75,49 @@ export function createSkyMaterial() {
         vec3 dir = normalize(vWorldPos);
         float up = clamp(dir.y, 0.0, 1.0);
 
-        // Deep dramatic vertical gradient (stays below bloom threshold so sky never washes out!)
         vec3 col = mix(uHorizonColor, uMidColor, smoothstep(0.0, 0.22, up));
         col = mix(col, uTopColor, smoothstep(0.16, 0.68, up));
 
-        // Dual directional neon smog city bounce along horizon (magenta west / cyan east)
+        // Dual directional neon smog bounce along horizon
         float azim = atan(dir.z, dir.x);
         float horizonBand = exp(-abs(dir.y - 0.015) * 14.0);
         float accentMask = 0.5 + 0.5 * sin(azim * 2.0 - 0.7);
         vec3 horizonBounce = mix(uHorizonColor, uAccentColor, accentMask * 0.72);
-        col += horizonBounce * horizonBand * (0.28 + 0.32 * uCyber);
+        col += horizonBounce * horizonBand * (0.26 + 0.30 * uCyber);
 
-        // Animated low cloud / smog strata illuminated from beneath by neon city
+        // Animated nocturnal cloud deck lit from beneath by neon metropolis
         if (dir.y > 0.01) {
           vec2 cloudUV = dir.xz / (dir.y + 0.24) * 1.4;
           float c1 = fbm(cloudUV + vec2(uTime * 0.014, -uTime * 0.008));
           float c2 = fbm(cloudUV * 2.1 - vec2(uTime * 0.02, uTime * 0.011));
           float clouds = smoothstep(0.40, 0.84, c1 * 0.65 + c2 * 0.35);
           float cloudFade = smoothstep(0.02, 0.14, dir.y) * smoothstep(0.72, 0.16, dir.y);
-          vec3 cloudTint = mix(uHorizonColor * 0.62, uAccentColor * 0.55, c2);
-          col = mix(col, col * 0.55 + cloudTint * (0.28 + 0.35 * uCyber), clouds * cloudFade * 0.72);
+          vec3 cloudTint = mix(uHorizonColor * 0.58, uAccentColor * 0.52, c2);
+          col = mix(col, col * 0.55 + cloudTint * (0.26 + 0.34 * uCyber), clouds * cloudFade * 0.72);
         }
 
         // Stylized Setting Dusk Sun (0%) <-> Retrowave Sliced Cyber Moon (100%)
         vec3 sunDir = normalize(vec3(0.58, 0.21, -0.78));
         float sunDot = dot(dir, sunDir);
         float disc = smoothstep(0.9972, 0.9985, sunDot);
-        float halo = pow(max(sunDot, 0.0), 34.0) * 0.35 + pow(max(sunDot, 0.0), 8.0) * 0.08;
+        float halo = pow(max(sunDot, 0.0), 34.0) * 0.32 + pow(max(sunDot, 0.0), 8.0) * 0.07;
         float slice = mix(1.0, step(0.30, fract(dir.y * 92.0)), uCyber * smoothstep(0.24, 0.18, dir.y));
         vec3 orbCol = mix(vec3(1.0, 0.72, 0.38), vec3(1.0, 0.12, 0.45), uCyber);
         col += orbCol * halo;
-        col = mix(col, orbCol * 1.15, disc * slice);
+        col = mix(col, orbCol * 1.12, disc * slice);
 
-        // Distant megastructure orbital arc in upper sky (cyber mode)
+        // Distant megastructure orbital arc in upper sky
         float ringDist = abs(dir.y - (0.38 + 0.16 * sin(azim + 0.75)));
-        float ring = smoothstep(0.004, 0.0008, ringDist) * smoothstep(0.10, 0.32, dir.y);
-        col += uAccentColor * ring * 0.38 * uCyber;
+        float ring = smoothstep(0.0038, 0.0008, ringDist) * smoothstep(0.10, 0.32, dir.y);
+        col += uAccentColor * ring * 0.34 * uCyber;
 
-        // Crisp subtle stars near zenith
+        // Subtle stars near zenith
         if (dir.y > 0.20) {
           vec2 starGrid = floor((dir.xz / (dir.y + 0.5)) * 170.0);
           float starSeed = hash21(starGrid);
           if (starSeed > 0.993) {
             float twinkle = 0.6 + 0.4 * sin(uTime * 2.4 + starSeed * 62.0);
-            col += vec3(0.75, 0.85, 1.0) * twinkle * smoothstep(0.20, 0.65, dir.y) * 0.55;
+            col += vec3(0.75, 0.85, 1.0) * twinkle * smoothstep(0.20, 0.65, dir.y) * 0.52;
           }
         }
 
@@ -119,8 +125,7 @@ export function createSkyMaterial() {
           col = mix(col, uTopColor * 0.45, smoothstep(0.0, -0.1, dir.y));
         }
 
-        // Cap non-disc sky brightness below bloom threshold so the sky stays crisp & deep
-        col = min(col, vec3(0.86));
+        col = min(col, vec3(0.84));
         gl_FragColor = vec4(col, 1.0);
       }
     `
@@ -128,11 +133,15 @@ export function createSkyMaterial() {
 }
 
 /* ============================================================================
-   2. PROCEDURAL SKYSCRAPER WINDOW MATRIX SHADER (Anti-Aliased Architectural Glass)
+   2. AAA OBSIDIAN ARCHITECTURAL GLASS SKYSCRAPER SHADER
+      - Deep gunmetal/obsidian glass base (#050811 .. #0a101d), zero purple wash
+      - 3x finer & denser horizontal floor ribbons + crisp vertical glass mullions
+      - Clustered realistic office strips (~25-33% lit), dark MEP floors every 12F
+      - Subtle reflective vertical glass sheen + crisp thin cyber crown/corner trim
    ============================================================================ */
 export function createBuildingWindowMaterial({
   isInstanced = true,
-  baseTint = 0x101828,
+  baseTint = 0x070c16,
   seed = 0.37,
   accentIndex = 0.15
 } = {}) {
@@ -140,8 +149,8 @@ export function createBuildingWindowMaterial({
     uniforms: {
       uTime: { value: 0 },
       uCyber: { value: 1.0 },
-      uFogColor: { value: new THREE.Color(0x0b0618) },
-      uFogDensity: { value: 0.00175 },
+      uFogColor: { value: new THREE.Color(0x090714) },
+      uFogDensity: { value: 0.0017 },
       uBaseTint: { value: new THREE.Color(baseTint) },
       uSunDir: { value: new THREE.Vector3(0.55, 0.62, 0.45).normalize() },
       uHeroData: { value: new THREE.Vector4(24.0, 90.0, seed, accentIndex) }
@@ -184,7 +193,7 @@ export function createBuildingWindowMaterial({
       varying vec3 vWorldNormal;
       varying vec3 vLocalPos;
       varying vec2 vUv;
-      varying vec4 vData; // x: width, y: height, z: random seed, w: accent palette index
+      varying vec4 vData; // x: width, y: height, z: quantized integer seed, w: accent index
 
       float hash21(vec2 p) {
         p = fract(p * vec2(127.1, 311.7));
@@ -198,99 +207,123 @@ export function createBuildingWindowMaterial({
         float dist = length(cameraPosition - vWorldPos);
         float isRoof = step(0.65, N.y);
 
-        // Quantize integer building seed cleanly so perspective interpolation never causes window static!
+        // Exact integer seed quantization (zero perspective interpolation noise!)
         float seedInt = floor(vData.z + 0.5);
         float seedNorm = seedInt * 0.01;
 
-        // Real Astana Dusk: sleek reflective deep steel-blue / warm architectural stone cladding
-        // Night City 2077: dark rain-wet obsidian monoliths so glowing neon windows POP!
-        vec3 realFacade = mix(uBaseTint * 1.45 + vec3(0.06, 0.09, 0.14), vec3(0.18, 0.22, 0.30), seedNorm * 0.45);
-        vec3 cyberFacade = uBaseTint * 0.42 + vec3(0.015, 0.018, 0.038);
+        // Deep obsidian / gunmetal-blue architectural glass (Astana Dusk: refined dark blue-slate steel)
+        vec3 realFacade = mix(uBaseTint * 2.2 + vec3(0.04, 0.07, 0.12), vec3(0.14, 0.19, 0.27), seedNorm * 0.55);
+        vec3 cyberFacade = mix(vec3(0.018, 0.028, 0.055), vec3(0.036, 0.052, 0.088), seedNorm) + uBaseTint * 0.35;
         vec3 facadeBase = mix(realFacade, cyberFacade, uCyber);
 
         float ndl = max(dot(N, uSunDir), 0.0);
-        float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.2);
+        float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.6);
 
-        // Warm golden sunset reflection on Astana Dusk glass -> cyan/magenta reflection in Night City
-        vec3 duskSkyRefl = mix(vec3(0.28, 0.42, 0.68), vec3(0.95, 0.62, 0.32), pow(max(dot(N, vec3(0.6, 0.2, -0.7)), 0.0), 2.0));
-        vec3 cyberSkyRefl = vec3(0.04, 0.26, 0.44);
-        vec3 skyReflect = mix(duskSkyRefl, cyberSkyRefl, uCyber);
-        vec3 pinkBounce = vec3(0.32, 0.03, 0.22) * uCyber * max(dot(N, normalize(vec3(-0.7, 0.15, 0.6))), 0.0);
+        // Subtle reflective curtain-wall sky & distant neon horizon reflection
+        vec3 R = reflect(-V, N);
+        float heightSheen = smoothstep(0.0, 95.0, vWorldPos.y);
+        vec3 duskRefl = mix(vec3(0.14, 0.26, 0.46), vec3(0.85, 0.52, 0.26), pow(max(dot(R, vec3(0.55, 0.15, -0.75)), 0.0), 2.5));
+        vec3 cyberRefl = mix(vec3(0.02, 0.12, 0.22), vec3(0.04, 0.28, 0.38), heightSheen)
+                       + vec3(0.14, 0.02, 0.10) * pow(max(dot(R, normalize(vec3(-0.75, 0.08, 0.65))), 0.0), 3.0);
+        vec3 skyReflect = mix(duskRefl, cyberRefl, uCyber);
 
-        vec3 col = facadeBase * (0.34 + 0.52 * ndl) + skyReflect * fresnel * 0.38 + pinkBounce * 0.32;
+        vec3 col = facadeBase * (0.38 + 0.48 * ndl) + skyReflect * (0.14 + 0.42 * fresnel);
 
         if (isRoof < 0.5) {
-          float seed = seedNorm;
           float horizCoord = abs(N.x) > 0.5 ? vWorldPos.z : vWorldPos.x;
 
-          // Clean architectural curtain-wall floor & bay spacing
-          float wx = horizCoord * 0.42 + seedInt * 1.37;
-          float wy = vWorldPos.y * 0.32;
+          // 3x FINER & DENSER architectural curtain-wall glass grid!
+          float wx = horizCoord * 1.18 + seedInt * 1.73;
+          float wy = vWorldPos.y * 0.86;
 
           vec2 cell = floor(vec2(wx, wy));
           vec2 f = fract(vec2(wx, wy));
 
-          // Anti-aliased smooth mullions that stay silky at distance (zero moire!)
-          float aa = clamp(dist * 0.0007, 0.02, 0.22);
-          float paneX = smoothstep(0.12 - aa, 0.18 + aa, f.x) * (1.0 - smoothstep(0.82 - aa, 0.88 + aa, f.x));
-          float paneY = smoothstep(0.20 - aa, 0.28 + aa, f.y) * (1.0 - smoothstep(0.76 - aa, 0.84 + aa, f.y));
+          // Crisp architectural mullions + spandrel slab dividers (anti-aliased by distance)
+          float aa = clamp(dist * 0.0012, 0.03, 0.28);
+          float paneX = smoothstep(0.10 - aa, 0.18 + aa, f.x) * (1.0 - smoothstep(0.82 - aa, 0.90 + aa, f.x));
+          float paneY = smoothstep(0.24 - aa, 0.34 + aa, f.y) * (1.0 - smoothstep(0.76 - aa, 0.86 + aa, f.y));
           float pane = paneX * paneY;
 
-          // Horizontal office bands (multi-room clusters look like real skyscrapers!)
-          float clusterX = floor(cell.x * 0.35);
-          float floorRand = hash21(vec2(cell.y, seedInt * 3.17));
-          float clusterRand = hash21(vec2(clusterX, cell.y) + vec2(seedInt * 5.71, seedInt * 2.13));
-          float roomRand = hash21(cell + vec2(seedInt * 7.31, seedInt * 11.43));
+          // Subtle vertical structural glass pilaster sheen every 4 bays (even on dark floors!)
+          float majorRib = smoothstep(0.04, 0.0, abs(fract(wx * 0.25) - 0.5));
+          float glassBand = paneY * (0.04 + 0.09 * fresnel);
+          col += skyReflect * glassBand * (1.0 - majorRib * 0.7);
+          col *= (1.0 - majorRib * 0.28);
 
-          float density = mix(0.28, 0.54, uCyber);
-          float lit = step(1.0 - density, mix(roomRand, clusterRand, 0.55)) * step(0.26, floorRand);
+          // Dark mechanical / MEP equipment floors every 12 stories + recessed ground lobby
+          float floorIdx = cell.y;
+          float isMepFloor = step(11.5, mod(floorIdx, 12.0));
+          float groundPlinth = smoothstep(1.8, 3.6, vWorldPos.y);
 
-          // Leave dark ground plinth + mechanical sky-lobby floors
-          float groundPlinth = smoothstep(2.0, 4.2, vWorldPos.y);
-          float mechBand = step(0.11, fract(vWorldPos.y / 30.0));
-          lit *= pane * groundPlinth * mechBand;
+          // Clustered horizontal office suites (3-6 panes wide) -> realistic modern corporate towers!
+          float suiteId = floor(cell.x * 0.22 + hash21(vec2(floorIdx, seedInt * 2.3)) * 2.0);
+          float floorOcc = hash21(vec2(floorIdx, seedInt * 3.17));
+          float suiteRand = hash21(vec2(suiteId, floorIdx) + vec2(seedInt * 5.71, seedInt * 2.13));
+          float paneVar = hash21(cell + vec2(seedInt * 7.31, seedInt * 11.43));
 
-          // Window color palette:
-          // Real Astana Dusk: warm golden/champagne offices + soft cool white
-          // Night City 2077: crisp saturated cyan, warm amber, hot magenta & cool white
-          vec3 warmOffice = mix(vec3(0.95, 0.72, 0.38), vec3(0.72, 0.84, 0.96), step(0.72, roomRand));
-          vec3 cyberPalette = vec3(0.0, 0.88, 1.0);
-          if (roomRand > 0.80) cyberPalette = vec3(1.0, 0.06, 0.44);
-          else if (roomRand > 0.52) cyberPalette = vec3(1.0, 0.76, 0.12);
-          else if (roomRand > 0.34) cyberPalette = vec3(0.88, 0.94, 1.0);
+          // Realistic occupancy: ~22% in Astana Dusk, ~32% in Night City (never cluttered pastel noise!)
+          float density = mix(0.22, 0.34, uCyber);
+          float suiteLit = step(1.0 - density, suiteRand) * step(0.28, floorOcc);
+          // Occasional dark individual office inside a lit suite for natural realism
+          float paneMask = step(0.18, paneVar);
+          float lit = suiteLit * paneMask * pane * (1.0 - isMepFloor) * groundPlinth;
 
-          vec3 winCol = mix(warmOffice, cyberPalette, uCyber * (0.42 + 0.58 * step(0.32, floorRand)));
+          // Subtle horizontal interior depth gradient inside each lit office pane (brighter ceiling!)
+          float interiorGrad = mix(0.62, 1.05, smoothstep(0.25, 0.78, f.y));
 
-          float pulse = 0.90 + 0.10 * sin(uTime * 1.4 + seed * 50.0 + cell.y * 0.6);
-          // Controlled brightness (~0.88 max on general windows so only neon crowns & billboards bloom!)
-          float winBoost = mix(0.62, 0.94, uCyber);
-          col += winCol * lit * pulse * winBoost;
+          // Ground lobby warm/cyan showcase glazing
+          float lobbyWin = (1.0 - groundPlinth) * step(0.4, vWorldPos.y) * paneX * step(0.35, suiteRand) * 0.65;
+
+          // Realistic Architectural Color Palette:
+          // Real Astana: warm tungsten/champagne offices + clean daylight-white offices
+          // Night City: refined warm-white, cool architectural cyan-white, warm amber, rare neon accent suite
+          vec3 warmWhite = vec3(1.0, 0.86, 0.64);
+          vec3 coolWhite = vec3(0.76, 0.91, 1.0);
+          vec3 amberOffice = vec3(1.0, 0.68, 0.28);
+          vec3 cyanOffice = vec3(0.18, 0.88, 1.0);
+          vec3 accentMagenta = vec3(1.0, 0.14, 0.48);
+
+          vec3 realWinCol = mix(warmWhite, coolWhite, step(0.62, suiteRand));
+          vec3 cyberWinCol = warmWhite;
+          if (suiteRand > 0.93) cyberWinCol = accentMagenta; // rare ~7% corporate neon room
+          else if (suiteRand > 0.72) cyberWinCol = cyanOffice;
+          else if (suiteRand > 0.48) cyberWinCol = amberOffice;
+          else if (suiteRand > 0.28) cyberWinCol = coolWhite;
+
+          vec3 winCol = mix(realWinCol, cyberWinCol, uCyber * 0.82);
+
+          // Gentle subtle office shimmer + selective brightness (keeps general windows crisp, not bloom soup)
+          float shimmer = 0.94 + 0.06 * sin(uTime * 1.1 + seedInt + floorIdx * 0.4);
+          float winIntensity = mix(0.68, 0.92, uCyber) * interiorGrad * shimmer;
+          col += winCol * (lit * winIntensity + lobbyWin * mix(0.55, 0.85, uCyber));
 
           #ifdef USE_INSTANCING
-          // Razor-sharp glowing neon crown stripe near top of instanced Night City skyscrapers
+          // Razor-thin architectural neon crown strip at top edge of select Night City megatowers
           float normY = vLocalPos.y + 0.5;
-          float crownBand = smoothstep(0.962, 0.976, normY) * smoothstep(0.996, 0.986, normY);
-          vec3 crownColor = vData.w < 0.36
+          float crownBand = smoothstep(0.975, 0.985, normY) * smoothstep(0.998, 0.990, normY);
+          float hasCrown = step(0.38, seedNorm);
+          vec3 crownColor = vData.w < 0.45
             ? vec3(0.0, 0.95, 1.0)
-            : (vData.w < 0.70 ? vec3(1.0, 0.04, 0.42) : vec3(0.99, 0.92, 0.05));
-          col += crownColor * crownBand * (0.06 + 1.38 * uCyber);
+            : (vData.w < 0.78 ? vec3(1.0, 0.08, 0.44) : vec3(0.99, 0.85, 0.10));
+          col += crownColor * crownBand * hasCrown * (0.04 + 1.32 * uCyber);
 
-          // Thin vertical corner neon accent on select tall instanced megablocks
-          float cornerTrim = smoothstep(0.478, 0.496, abs(vLocalPos.x)) * smoothstep(0.478, 0.496, abs(vLocalPos.z));
-          col += crownColor * cornerTrim * step(0.55, seed) * 1.15 * uCyber;
+          // Crisp razor-thin vertical corner neon edge strip on tall hero filler towers
+          float cornerTrim = smoothstep(0.486, 0.497, abs(vLocalPos.x)) * smoothstep(0.486, 0.497, abs(vLocalPos.z));
+          float tallEnough = step(46.0, vData.y);
+          col += crownColor * cornerTrim * tallEnough * step(0.55, seedNorm) * 1.15 * uCyber;
           #endif
         } else {
-          // Dark metallic roof slab with subtle crisp perimeter trim on instanced blocks
+          // Dark architectural roof gravel/steel + thin subtle perimeter accent only on select towers
+          col *= 0.42;
           #ifdef USE_INSTANCING
-          float roofEdge = max(smoothstep(0.465, 0.496, abs(vLocalPos.x)), smoothstep(0.465, 0.496, abs(vLocalPos.z)));
-          vec3 roofNeon = vData.w < 0.5 ? vec3(0.0, 0.9, 1.0) : vec3(1.0, 0.05, 0.42);
-          col = col * 0.5 + roofNeon * roofEdge * 0.62 * uCyber;
-          #else
-          col = col * 0.55;
+          float roofEdge = max(smoothstep(0.478, 0.496, abs(vLocalPos.x)), smoothstep(0.478, 0.496, abs(vLocalPos.z)));
+          vec3 roofNeon = vData.w < 0.55 ? vec3(0.0, 0.88, 1.0) : vec3(1.0, 0.08, 0.44);
+          col += roofNeon * roofEdge * step(0.42, seedNorm) * 0.45 * uCyber;
           #endif
         }
 
-        // Atmospheric distance fog matching scene
+        // Exponential distance fog matching scene
         float fogFactor = 1.0 - exp(-pow(dist * uFogDensity, 2.0));
         col = mix(col, uFogColor, clamp(fogFactor, 0.0, 1.0));
 
@@ -301,101 +334,18 @@ export function createBuildingWindowMaterial({
 }
 
 /* ============================================================================
-   3. ESIL RIVER WATER SHADER (Deep Obsidian Water + Vibrant Neon Shimmer)
+   3. AAA ESIL RIVER WATER SHADER
+      - Deep near-black nocturnal mirror (#03060c)
+      - Fine anisotropic horizontal wave ripples (high-freq multi-octave)
+      - Stretched vertical Blade Runner / Night City neon specular reflections!
    ============================================================================ */
 export function createEsilRiverMaterial() {
   return new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
       uCyber: { value: 1.0 },
-      uFogColor: { value: new THREE.Color(0x0b0618) },
-      uFogDensity: { value: 0.00175 }
-    },
-    vertexShader: /* glsl */ `
-      varying vec3 vWorldPos;
-      varying vec2 vUv;
-      void main() {
-        vUv = uv;
-        vec4 wp = modelMatrix * vec4(position, 1.0);
-        vWorldPos = wp.xyz;
-        gl_Position = projectionMatrix * viewMatrix * wp;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uTime;
-      uniform float uCyber;
-      uniform vec3 uFogColor;
-      uniform float uFogDensity;
-      varying vec3 vWorldPos;
-      varying vec2 vUv;
-
-      float hash(vec2 p) {
-        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-      }
-
-      float noise(vec2 p) {
-        vec2 i = floor(p);
-        vec2 f = fract(p);
-        vec2 u = f * f * (3.0 - 2.0 * f);
-        return mix(
-          mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
-          mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
-          u.y
-        );
-      }
-
-      void main() {
-        vec2 p = vWorldPos.xz * 0.20;
-        float w1 = noise(p * vec2(1.8, 0.75) + vec2(0.0, uTime * 0.45));
-        float w2 = noise(p * vec2(3.6, 1.45) - vec2(uTime * 0.22, uTime * 0.62));
-        float wave = (w1 * 0.6 + w2 * 0.4) - 0.5;
-
-        vec3 N = normalize(vec3(wave * 0.38, 1.0, (w2 - 0.5) * 0.48));
-        vec3 V = normalize(cameraPosition - vWorldPos);
-        float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.8);
-
-        vec3 deepWater = mix(vec3(0.025, 0.08, 0.16), vec3(0.01, 0.015, 0.045), uCyber);
-        vec3 skyRefl = mix(vec3(0.24, 0.38, 0.58), vec3(0.08, 0.05, 0.18), uCyber);
-        vec3 col = mix(deepWater, skyRefl, fresnel * 0.78);
-
-        // Crisp neon skyline reflection ribbons rippling across the Esil River
-        float stripCoord = vWorldPos.z * 0.10 + wave * 4.2;
-        float shimmer1 = pow(0.5 + 0.5 * sin(stripCoord * 2.4 + 0.5), 7.0);
-        float shimmer2 = pow(0.5 + 0.5 * sin(stripCoord * 3.9 - 1.4), 8.0);
-        float shimmer3 = pow(0.5 + 0.5 * sin(stripCoord * 1.6 + 2.2), 6.0);
-
-        float centerGlow = exp(-abs(vWorldPos.z) * 0.012);
-        vec3 duskRefl = vec3(0.95, 0.68, 0.34) * (shimmer1 * 0.65 + shimmer3 * 0.45);
-        vec3 cyberRefl =
-          vec3(0.0, 0.92, 1.0) * shimmer1 * 0.95 +
-          vec3(1.0, 0.04, 0.45) * shimmer2 * 0.92 +
-          vec3(0.99, 0.85, 0.08) * shimmer3 * 0.72;
-
-        col += mix(duskRefl, cyberRefl, uCyber) * (0.45 + 0.75 * centerGlow) * (0.35 + 0.65 * fresnel);
-
-        float bankEdge = smoothstep(0.07, 0.0, vUv.x) + smoothstep(0.93, 1.0, vUv.x);
-        col += mix(vec3(0.85, 0.68, 0.42), vec3(0.0, 0.85, 1.0), uCyber) * bankEdge * 0.42;
-
-        float dist = length(cameraPosition - vWorldPos);
-        float fogFactor = 1.0 - exp(-pow(dist * uFogDensity, 2.0));
-        col = mix(col, uFogColor, clamp(fogFactor, 0.0, 1.0));
-
-        gl_FragColor = vec4(col, 1.0);
-      }
-    `
-  });
-}
-
-/* ============================================================================
-   4. WET ASPHALT & RAIN PUDDLE REFLECTION SHADER (Nurzhol Boulevard & Roads)
-   ============================================================================ */
-export function createWetRoadMaterial() {
-  return new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uCyber: { value: 1.0 },
-      uFogColor: { value: new THREE.Color(0x0b0618) },
-      uFogDensity: { value: 0.00175 }
+      uFogColor: { value: new THREE.Color(0x090714) },
+      uFogDensity: { value: 0.0017 }
     },
     vertexShader: /* glsl */ `
       varying vec3 vWorldPos;
@@ -432,42 +382,184 @@ export function createWetRoadMaterial() {
 
       void main() {
         vec2 wp = vWorldPos.xz;
-        float puddleNoise = noise(wp * 0.085) * 0.65 + noise(wp * 0.26) * 0.35;
-        float wetness = smoothstep(0.36, 0.72, puddleNoise) * uCyber;
 
-        float ripple = sin(length(fract(wp * 0.35) - 0.5) * 32.0 - uTime * 8.0) * 0.5 + 0.5;
-        ripple *= wetness * 0.10;
+        // Fine high-frequency anisotropic river ripples (stretched across channel width)
+        float r1 = sin(wp.y * 2.2 + wp.x * 0.35 + uTime * 2.1) * 0.5;
+        float r2 = sin(wp.y * 4.7 - wp.x * 0.55 - uTime * 2.8) * 0.3;
+        float r3 = (noise(vec2(wp.x * 0.9, wp.y * 2.6 + uTime * 0.9)) - 0.5) * 0.85;
+        float r4 = (noise(vec2(wp.x * 2.2, wp.y * 6.5 - uTime * 1.4)) - 0.5) * 0.45;
+        float rippleZ = (r1 + r2 + r3 + r4) * 0.22;
+        float rippleX = (noise(vec2(wp.x * 1.6, wp.y * 3.8 + uTime * 0.7)) - 0.5) * 0.14;
 
-        // Deep crisp wet asphalt
-        vec3 dryAsphalt = vec3(0.075, 0.082, 0.105);
-        vec3 wetAsphalt = vec3(0.018, 0.022, 0.040);
-        vec3 col = mix(dryAsphalt, wetAsphalt, 0.25 + 0.75 * wetness);
-        col += noise(wp * 1.8) * 0.018;
-
-        // Crisp boulevard lane markings along Nurzhol axis (Z = +-14 lanes)
-        float distLane1 = abs(abs(wp.y) - 14.0);
-        float dash = step(0.42, fract(wp.x * 0.12));
-        float laneLine = smoothstep(0.30, 0.10, distLane1) * dash * step(-112.0, wp.x) * step(wp.x, 128.0);
-        vec3 markCol = mix(vec3(0.75, 0.72, 0.62), vec3(0.0, 0.90, 1.0), uCyber * 0.8);
-        col += markCol * laneLine * 0.55;
-
-        // Illuminated curbside light strip flanking Nurzhol promenade
-        float curb = smoothstep(0.38, 0.10, abs(abs(wp.y) - 9.2)) * step(-102.0, wp.x) * step(wp.x, 96.0);
-        vec3 curbCol = mix(vec3(0.85, 0.66, 0.35), vec3(0.99, 0.90, 0.06), uCyber);
-        col += curbCol * curb * (0.20 + 0.85 * uCyber);
-
-        // Specular neon puddle reflections
+        vec3 N = normalize(vec3(rippleX, 1.0, rippleZ));
         vec3 V = normalize(cameraPosition - vWorldPos);
-        float fresnel = pow(1.0 - max(V.y, 0.0), 2.2);
+        vec3 R = reflect(-V, N);
+        float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.4);
 
-        float neonBandA = pow(0.5 + 0.5 * sin(wp.x * 0.065 + puddleNoise * 4.5), 4.0);
-        float neonBandB = pow(0.5 + 0.5 * cos(wp.y * 0.075 - puddleNoise * 5.0), 4.0);
-        vec3 puddleGlow =
-          vec3(0.0, 0.88, 1.0) * neonBandA * 0.72 +
-          vec3(1.0, 0.04, 0.45) * neonBandB * 0.68 +
-          vec3(1.0, 0.72, 0.12) * exp(-length(wp) * 0.020) * 0.70;
+        // Deep near-black mirror water base
+        vec3 deepWater = mix(vec3(0.02, 0.055, 0.11), vec3(0.010, 0.016, 0.032), uCyber);
+        vec3 skyTint = mix(vec3(0.18, 0.28, 0.46), vec3(0.05, 0.04, 0.12), uCyber);
+        vec3 col = mix(deepWater, skyTint, fresnel * 0.65);
 
-        col += puddleGlow * (0.16 + wetness * 0.78 + ripple) * (0.35 + 0.65 * fresnel) * (0.12 + 0.88 * uCyber);
+        // High-frequency horizontal sparkle modulation across water ripples
+        float fineSparkle = pow(0.5 + 0.5 * sin(wp.y * 5.8 + rippleZ * 18.0 - uTime * 2.4), 5.0);
+        float microGlint = pow(0.5 + 0.5 * sin(wp.y * 11.5 - rippleZ * 26.0 + uTime * 3.6), 8.0);
+        float rippleSpec = 0.28 + 0.72 * fineSparkle + 0.65 * microGlint;
+
+        // Stretched vertical reflections aligned to real skyline light columns (Ak Orda, Bridges, Megatowers!)
+        float bridgeMain = exp(-abs(wp.y) * 0.065);
+        float bridgeNorth = exp(-abs(wp.y + 88.0) * 0.08);
+        float bridgeSouth = exp(-abs(wp.y - 86.0) * 0.08);
+        float akOrdaGold = exp(-abs(wp.y) * 0.045) * smoothstep(162.0, 134.0, wp.x);
+        float towerCol1 = exp(-pow(sin((wp.y + 18.0) * 0.065), 2.0) * 18.0);
+        float towerCol2 = exp(-pow(sin((wp.y - 26.0) * 0.055), 2.0) * 20.0);
+        float towerCol3 = exp(-pow(sin((wp.y + 42.0) * 0.085), 2.0) * 22.0);
+
+        vec3 duskCol =
+          vec3(1.0, 0.74, 0.36) * (akOrdaGold * 0.75 + bridgeMain * 0.5 + towerCol1 * 0.25) +
+          vec3(0.45, 0.75, 1.0) * (bridgeNorth + bridgeSouth) * 0.35;
+
+        vec3 cyberCol =
+          vec3(0.0, 0.92, 1.0) * ((bridgeMain + bridgeNorth + bridgeSouth) * 0.95 + towerCol1 * 0.62) +
+          vec3(1.0, 0.08, 0.44) * (towerCol2 * 0.65) +
+          vec3(1.0, 0.76, 0.18) * (akOrdaGold * 0.85 + towerCol3 * 0.42);
+
+        col += mix(duskCol, cyberCol, uCyber) * rippleSpec * (0.30 + 0.70 * fresnel);
+
+        // Crisp embankment shoreline glow (thin specular edge along concrete walls)
+        float bankEdge = smoothstep(0.045, 0.0, vUv.x) + smoothstep(0.955, 1.0, vUv.x);
+        col += mix(vec3(0.65, 0.52, 0.34), vec3(0.0, 0.85, 1.0), uCyber) * bankEdge * 0.38;
+
+        float dist = length(cameraPosition - vWorldPos);
+        float fogFactor = 1.0 - exp(-pow(dist * uFogDensity, 2.0));
+        col = mix(col, uFogColor, clamp(fogFactor, 0.0, 1.0));
+
+        gl_FragColor = vec4(col, 1.0);
+      }
+    `
+  });
+}
+
+/* ============================================================================
+   4. AAA WET CHARCOAL ASPHALT BOULEVARD SHADER
+      - Deep crisp charcoal wet asphalt (#080b11), fine asphalt micro-grain
+      - Razor-sharp painted road lanes, double centerlines, crosswalks & curbs
+      - Sharp-edged localized glossy rain puddles reflecting fine neon streaks (zero blurry pastel clouds!)
+   ============================================================================ */
+export function createWetRoadMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uCyber: { value: 1.0 },
+      uFogColor: { value: new THREE.Color(0x090714) },
+      uFogDensity: { value: 0.0017 }
+    },
+    vertexShader: /* glsl */ `
+      varying vec3 vWorldPos;
+      varying vec2 vUv;
+      void main() {
+        vUv = uv;
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vWorldPos = wp.xyz;
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime;
+      uniform float uCyber;
+      uniform vec3 uFogColor;
+      uniform float uFogDensity;
+      varying vec3 vWorldPos;
+      varying vec2 vUv;
+
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+      }
+
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        vec2 u = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+          mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+          u.y
+        );
+      }
+
+      float fbm(vec2 p) {
+        float v = 0.0;
+        float a = 0.5;
+        for (int i = 0; i < 3; i++) {
+          v += a * noise(p);
+          p *= 2.1;
+          a *= 0.5;
+        }
+        return v;
+      }
+
+      void main() {
+        vec2 wp = vWorldPos.xz;
+
+        // Crisp dark charcoal asphalt base + fine aggregate micro-grain
+        float fineGrain = noise(wp * 4.5) * 0.016 + noise(wp * 13.0) * 0.008;
+        vec3 dryAsphalt = vec3(0.055, 0.062, 0.078) + fineGrain;
+        vec3 wetAsphalt = vec3(0.024, 0.029, 0.042) + fineGrain * 0.45;
+
+        // Sharp-edged realistic rain puddles (NOT low-freq blurry haze!)
+        float puddleField = fbm(wp * 0.095 + vec2(2.3, -1.7));
+        float puddleMask = smoothstep(0.51, 0.59, puddleField) * uCyber;
+
+        vec3 col = mix(dryAsphalt, wetAsphalt, 0.35 + 0.65 * puddleMask);
+
+        // Nurzhol Boulevard Roadway Corridor (Z = +-9.5 to +-20.5)
+        float absZ = abs(wp.y);
+        float inBoulevard = step(-118.0, wp.x) * step(wp.x, 128.0);
+        float onRoad = step(9.2, absZ) * step(absZ, 21.0) * inBoulevard;
+
+        // Slightly darker freshly-paved asphalt on active road lanes
+        col = mix(col, col * 0.78, onRoad);
+
+        // Crisp painted dashed lane dividers (at Z = +-13.0 and Z = +-17.0)
+        float dash = step(0.45, fract(wp.x * 0.14));
+        float lane1 = smoothstep(0.22, 0.06, abs(absZ - 13.2)) * dash * onRoad;
+        float lane2 = smoothstep(0.22, 0.06, abs(absZ - 17.0)) * dash * onRoad;
+        vec3 paintCol = mix(vec3(0.74, 0.72, 0.64), vec3(0.75, 0.92, 1.0), uCyber * 0.55);
+        col += paintCol * (lane1 + lane2) * 0.52;
+
+        // Double amber-yellow / cyan edge curb line along boulevard median & outer shoulder
+        float innerCurb = smoothstep(0.24, 0.07, abs(absZ - 9.4)) * inBoulevard;
+        float outerCurb = smoothstep(0.22, 0.07, abs(absZ - 20.6)) * inBoulevard;
+        vec3 curbCol = mix(vec3(0.72, 0.58, 0.32), vec3(0.95, 0.78, 0.12), uCyber);
+        col += curbCol * innerCurb * (0.25 + 0.55 * uCyber);
+        col += vec3(0.0, 0.82, 1.0) * outerCurb * 0.42 * uCyber;
+
+        // Crisp zebra crosswalk bars flanking Baiterek Plaza (X = +-27)
+        float nearCrosswalk = step(abs(abs(wp.x) - 27.0), 2.4) * onRoad;
+        float zebra = step(0.45, fract(wp.y * 0.85));
+        col += vec3(0.78, 0.82, 0.88) * nearCrosswalk * zebra * 0.45;
+
+        // Sharp, localized glossy rain-puddle neon specular reflections + micro raindrop rings
+        vec3 V = normalize(cameraPosition - vWorldPos);
+        float fresnel = pow(1.0 - max(V.y, 0.0), 2.6);
+
+        // Fine raindrop concentric ring ripples inside puddles
+        vec2 dropCell = fract(wp * 0.65) - 0.5;
+        float dropRing = sin(length(dropCell) * 38.0 - uTime * 9.5) * exp(-length(dropCell) * 4.5);
+        float ripplePerturb = dropRing * puddleMask * 0.18;
+
+        // High-frequency specular light streak reflections ONLY crisp inside glossy puddles!
+        float streak1 = pow(max(0.0, sin(wp.y * 0.42 + wp.x * 0.04 + ripplePerturb * 6.0)), 10.0);
+        float streak2 = pow(max(0.0, cos(wp.y * 0.36 - wp.x * 0.05 - ripplePerturb * 6.0)), 12.0);
+        float baiterekPool = exp(-length(wp) * 0.024) * 0.75;
+
+        vec3 puddleRefl =
+          vec3(0.0, 0.90, 1.0) * (streak1 * 0.65 + innerCurb * 0.4) +
+          vec3(1.0, 0.08, 0.44) * (streak2 * 0.58) +
+          vec3(1.0, 0.72, 0.16) * baiterekPool;
+
+        // Wet sheen everywhere subtle (0.08), razor-crisp neon mirror glints inside puddles (0.78)
+        col += puddleRefl * (0.06 + puddleMask * 0.72) * (0.30 + 0.70 * fresnel) * uCyber;
 
         float dist = length(cameraPosition - vWorldPos);
         float fogFactor = 1.0 - exp(-pow(dist * uFogDensity, 2.0));
@@ -514,24 +606,20 @@ export function createHoloBillboardMaterial(texture, seed = 0) {
 
         vec2 uv = vUv;
 
-        // Subtle periodic horizontal cyber glitch slice
         float glitchTrigger = step(0.96, sin(uTime * 1.8 + uSeed * 17.3) * 0.5 + 0.5);
         float band = step(0.5, sin(uv.y * 28.0 + uTime * 12.0));
         uv.x += glitchTrigger * band * 0.022 * sin(uTime * 43.0 + uSeed);
 
-        // Crisp RGB split
         float ca = 0.0028 + glitchTrigger * 0.006;
         float r = texture2D(uMap, uv + vec2(ca, 0.0)).r;
         float g = texture2D(uMap, uv).g;
         float b = texture2D(uMap, uv - vec2(ca, 0.0)).b;
         vec3 col = vec3(r, g, b);
 
-        // CRT holographic scanlines + subtle refresh sweep
         float scan = 0.88 + 0.12 * sin(uv.y * 220.0 - uTime * 7.0);
         float sweep = exp(-abs(fract(uTime * 0.22 + uSeed) - uv.y) * 32.0) * 0.25;
         float lum = dot(col, vec3(0.299, 0.587, 0.114));
 
-        // Dark billboard backing stays rich & deep so neon text is razor-sharp & readable!
         vec3 finalCol = col * scan * mix(0.65, 1.18, smoothstep(0.18, 0.72, lum)) + col * sweep;
 
         float edge = smoothstep(0.0, 0.02, uv.x) * smoothstep(1.0, 0.98, uv.x)
@@ -539,7 +627,6 @@ export function createHoloBillboardMaterial(texture, seed = 0) {
 
         float wipeMask = smoothstep(uv.y - 0.10, uv.y + 0.04, reveal * 1.12);
         float flicker = 0.95 + 0.05 * sin(uTime * 16.0 + uSeed * 9.0);
-        // Translucent dark background (0.78) + solid bright neon lettering (0.98)
         float alpha = reveal * wipeMask * edge * flicker * mix(0.78, 0.98, smoothstep(0.12, 0.55, lum));
 
         gl_FragColor = vec4(finalCol, alpha);
@@ -549,7 +636,7 @@ export function createHoloBillboardMaterial(texture, seed = 0) {
 }
 
 /* ============================================================================
-   6. VOLUMETRIC SEARCHLIGHT BEAM SHADER (Subtle Silky Fresnel Additive Cone)
+   6. VOLUMETRIC SEARCHLIGHT BEAM SHADER (Silky Fresnel Additive Cone)
    ============================================================================ */
 export function createSearchlightMaterial(colorHex) {
   return new THREE.ShaderMaterial({
@@ -588,7 +675,6 @@ export function createSearchlightMaterial(colorHex) {
         float edgeSoft = pow(abs(dot(normalize(vNormalView), normalize(vViewDir))), 2.2);
         float verticalFade = smoothstep(0.0, 0.10, vUv.y) * pow(1.0 - vUv.y, 1.85);
         float shimmer = 0.90 + 0.10 * sin(uTime * 2.8 + vUv.y * 8.0);
-        // Delicate volumetric beam opacity (0.11) so overlapping beams never create white glare!
         float alpha = edgeSoft * verticalFade * shimmer * 0.11 * smoothstep(0.15, 0.88, uCyber) * uBoost;
         if (alpha < 0.002) discard;
         gl_FragColor = vec4(uColor * 0.95, alpha);
@@ -646,7 +732,7 @@ export function createNeonRainMaterial() {
         float strength = uRainIntensity * smoothstep(0.15, 0.75, uCyber);
         if (strength < 0.01) discard;
         vec3 col = mix(uColorA, uColorB, vTint);
-        gl_FragColor = vec4(col, vAlpha * 0.26 * min(strength, 1.25));
+        gl_FragColor = vec4(col, vAlpha * 0.25 * min(strength, 1.25));
       }
     `
   });

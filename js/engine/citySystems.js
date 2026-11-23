@@ -102,6 +102,31 @@ export function buildMegacityBlocks() {
     }
   }
 
+  // Add sculpted architectural setback crown tiers on ~50% of tall megatowers for rich Night City silhouettes!
+  const baseCount = placements.length;
+  for (let i = 0; i < baseCount; i++) {
+    const p = placements[i];
+    if (p.h > 38 && p.seed > 0.44) {
+      const crownH = 8 + rng() * 16;
+      const scale = 0.56 + rng() * 0.22;
+      placements.push({
+        x: p.x + (rng() - 0.5) * p.w * 0.14,
+        z: p.z + (rng() - 0.5) * p.d * 0.14,
+        yBase: p.h,
+        w: p.w * scale,
+        h: crownH,
+        d: p.d * scale,
+        seed: p.seed,
+        accent: p.accent,
+        isSetback: true
+      });
+      p.topY = p.h + crownH;
+    } else {
+      p.yBase = 0;
+      p.topY = p.h;
+    }
+  }
+
   const count = placements.length;
   const boxGeo = new THREE.BoxGeometry(1, 1, 1);
   const dataArray = new Float32Array(count * 4);
@@ -114,47 +139,73 @@ export function buildMegacityBlocks() {
   }
   boxGeo.setAttribute('aBuildingData', new THREE.InstancedBufferAttribute(dataArray, 4));
 
-  const buildingMat = createBuildingWindowMaterial({ isInstanced: true, baseTint: 0x151c2e });
+  const buildingMat = createBuildingWindowMaterial({ isInstanced: true, baseTint: 0x070c16 });
   const buildingsInst = new THREE.InstancedMesh(boxGeo, buildingMat, count);
   buildingsInst.castShadow = false;
   buildingsInst.receiveShadow = true;
 
   const dummy = new THREE.Object3D();
-  const tallIndices = [];
+  const roofTowers = [];
+  const tallAntennas = [];
   for (let i = 0; i < count; i++) {
     const p = placements[i];
-    dummy.position.set(p.x, p.h * 0.5, p.z);
+    const yBase = p.yBase || 0;
+    dummy.position.set(p.x, yBase + p.h * 0.5, p.z);
     dummy.scale.set(p.w, p.h, p.d);
     dummy.rotation.set(0, 0, 0);
     dummy.updateMatrix();
     buildingsInst.setMatrixAt(i, dummy.matrix);
-    if (p.h > 48) tallIndices.push(i);
+
+    if (!p.isSetback) {
+      roofTowers.push(p);
+      if (p.topY > 46) tallAntennas.push(p);
+    }
   }
   buildingsInst.instanceMatrix.needsUpdate = true;
   group.add(buildingsInst);
 
-  // Rooftop antennas & red aviation beacons on tall megablocks (2 InstancedMeshes)
-  const antMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.3 });
+  // Rooftop HVAC mechanical penthouses / cooling units on skyline towers (1 InstancedMesh)
+  const mechMat = new THREE.MeshStandardMaterial({ color: 0x101724, metalness: 0.72, roughness: 0.42 });
+  const hvacInst = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    mechMat,
+    roofTowers.length
+  );
+  roofTowers.forEach((p, idx) => {
+    const hw = p.w * (0.28 + (p.seed * 0.16));
+    const hd = p.d * (0.28 + ((1 - p.seed) * 0.16));
+    const hh = 1.6 + p.seed * 2.2;
+    dummy.position.set(p.x + (p.seed - 0.5) * 1.4, p.topY + hh * 0.5, p.z);
+    dummy.scale.set(hw, hh, hd);
+    dummy.updateMatrix();
+    hvacInst.setMatrixAt(idx, dummy.matrix);
+  });
+  group.add(hvacInst);
+
+  // Rooftop spires / communication antennae & red aviation beacons on tall megablocks
+  const antMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.85, roughness: 0.28 });
   const beaconMat = new THREE.MeshBasicMaterial({ color: 0xff003c });
   const antInst = new THREE.InstancedMesh(
-    new THREE.CylinderGeometry(0.12, 0.25, 10, 5),
+    new THREE.CylinderGeometry(0.08, 0.22, 12, 5),
     antMat,
-    tallIndices.length
+    tallAntennas.length
   );
   const beaconInst = new THREE.InstancedMesh(
-    new THREE.SphereGeometry(0.45, 6, 6),
+    new THREE.SphereGeometry(0.36, 6, 6),
     beaconMat,
-    tallIndices.length
+    tallAntennas.length
   );
 
-  tallIndices.forEach((bIdx, i) => {
-    const p = placements[bIdx];
-    dummy.position.set(p.x, p.h + 5, p.z);
-    dummy.scale.set(1, 1, 1);
+  tallAntennas.forEach((p, i) => {
+    const spireScale = 0.75 + p.seed * 0.7;
+    const spireH = 12 * spireScale;
+    dummy.position.set(p.x, p.topY + spireH * 0.5, p.z);
+    dummy.scale.set(1, spireScale, 1);
     dummy.updateMatrix();
     antInst.setMatrixAt(i, dummy.matrix);
 
-    dummy.position.set(p.x, p.h + 10.2, p.z);
+    dummy.position.set(p.x, p.topY + spireH + 0.2, p.z);
+    dummy.scale.set(1, 1, 1);
     dummy.updateMatrix();
     beaconInst.setMatrixAt(i, dummy.matrix);
   });
@@ -200,9 +251,9 @@ export function buildHoloBillboards() {
     { tex: 'baiterek_net', pos: [26, 28, -28], rotY: -0.35, w: 11, h: 23 },
     { tex: 'astana_2077', pos: [50, 26, 28], rotY: Math.PI + 0.35, w: 24, h: 12 },
     { tex: 'qazcorp', pos: [14, 28, 30], rotY: -0.65, w: 11, h: 22 },
-    // Khan Shatyr West Node
-    { tex: 'khantech', pos: [-106, 48, -32], rotY: -0.25, w: 15, h: 31 },
-    { tex: 'steppe_av', pos: [-90, 34, 34], rotY: -0.65, w: 24, h: 12 },
+    // Khan Shatyr West Node (cleanly flanking without occluding the iconic tilted tent!)
+    { tex: 'khantech', pos: [-106, 48, -36], rotY: -0.25, w: 15, h: 31 },
+    { tex: 'steppe_av', pos: [-74, 34, 36], rotY: -0.58, w: 24, h: 12 },
     // Nur Alem EXPO South Sector
     { tex: 'expo_grid', pos: [-12, 40, 74], rotY: -0.55, w: 26, h: 13 },
     // Esil Riverfront & Right Bank (facing River & Ak Orda cleanly — never mirrored!)

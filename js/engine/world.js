@@ -427,14 +427,14 @@ export class AstanaNightCityEngine {
       if (m.uniforms.uFogDensity) m.uniforms.uFogDensity.value = fogDensity;
     }
 
-    // Lights morphing — deep moody Night City contrast vs warm sunlit Astana Dusk
+    // Lights morphing — deep moody obsidian Night City contrast vs warm sunlit Astana Dusk
     this.sunLight.color.setHex(DUSK_BASE.sunColor).lerp(this._colB.setHex(p.sunColor), cyber);
-    this.sunLight.intensity = THREE.MathUtils.lerp(1.55, 0.55 + empFlash * 1.4, cyber);
+    this.sunLight.intensity = THREE.MathUtils.lerp(1.55, 0.58 + empFlash * 1.4, cyber);
     this.rimLight.color.setHex(DUSK_BASE.rimColor).lerp(this._colB.setHex(p.rimColor), cyber);
-    this.rimLight.intensity = THREE.MathUtils.lerp(0.45, 0.95 + empFlash * 1.0, cyber);
-    this.cyanFill.intensity = THREE.MathUtils.lerp(0.25, 0.65, cyber);
-    this.hemiLight.intensity = THREE.MathUtils.lerp(0.75, 0.36, cyber);
-    this.scene.environmentIntensity = THREE.MathUtils.lerp(0.68, 0.44, cyber);
+    this.rimLight.intensity = THREE.MathUtils.lerp(0.45, 0.62 + empFlash * 0.85, cyber);
+    this.cyanFill.intensity = THREE.MathUtils.lerp(0.25, 0.58, cyber);
+    this.hemiLight.intensity = THREE.MathUtils.lerp(0.75, 0.34, cyber);
+    this.scene.environmentIntensity = THREE.MathUtils.lerp(0.68, 0.42, cyber);
 
     // Post-processing Bloom & Exposure (selective neon glow — zero whiteout!)
     this.bloomPass.strength = THREE.MathUtils.lerp(DUSK_BASE.bloomStrength, p.bloomStrength, cyber) + empFlash * 0.25;
